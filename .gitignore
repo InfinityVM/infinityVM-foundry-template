@@ -1,0 +1,21 @@
+.DS_Store
+.idea/
+
+# Compiler files
+contracts/cache/
+contracts/out/
+contracts/data/
+
+server/build
+
+# Ignores development broadcast logs
+contracts/broadcast/**
+
+# Dotenv file
+contracts/.env
+
+# Rust Build Artifacts
+rust/target
+
+# ide
+.idea
