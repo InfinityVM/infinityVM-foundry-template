@@ -58,13 +58,15 @@ contract JobManager is
         imageIDToElfPath[imageID] = elfPath;
     }
 
-    function getElfPath(bytes32 imageID) external view returns (string memory) {
+    function getElfPath(bytes32 imageID) public view returns (string memory) {
         return imageIDToElfPath[imageID];
     }
 
     function createJob(bytes32 programID, bytes calldata programInput, uint64 maxCycles) external override returns (uint32 jobID) {
         jobID = jobIDCounter;
         jobIDToMetadata[jobID] = JobMetadata(programID, maxCycles, msg.sender, JOB_STATE_PENDING);
+        string memory elfPath = getElfPath(programID);
+        // TODO: Call prove() here
         emit JobCreated(jobID, maxCycles, programID, programInput);
         jobIDCounter++;
     }
