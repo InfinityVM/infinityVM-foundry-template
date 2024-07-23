@@ -19,3 +19,9 @@ rust/target
 
 # ide
 .idea
+
+programs/**/methods/Cargo.lock
+programs/**/program/target
+programs/**/program/elf
+/target/
+/debug/
