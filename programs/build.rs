@@ -1,3 +1,6 @@
+use utils::sol;
+
 fn main() {
-    risc0_build::embed_methods();
+    let guests = risc0_build::embed_methods();
+    // println!("cargo:warning=NARULA guests: {:?}", guests);
 }
