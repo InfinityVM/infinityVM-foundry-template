@@ -1,21 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
-import {JobManager} from "../../src/JobManager.sol";
-import {Consumer} from "../../src/Consumer.sol";
+import {JobManager} from "./JobManager.sol";
+import {Consumer} from "./Consumer.sol";
+import {ImageID} from "./ImageID.sol"; 
 
-contract MockConsumer is Consumer {
+contract ExampleConsumer is Consumer {
 
     mapping(address => uint256) public addressToBalance;
     mapping(uint32 => bytes) public jobIDToResult;
 
+    uint64 public constant DEFAULT_MAX_CYCLES = 1_000_000;
+
     constructor(address jobManager) Consumer(jobManager) {}
 
-    // It doesn't really make sense for the contract to accept programID
-    // as a parameter here (this would usually be hard-coded), but we do
-    // it here so we can pass in arbitrary program IDs while testing and
-    // in the CLI.
-    function requestBalance(bytes calldata programID, address addr) public returns (uint32) {
-        return requestJob(programID, abi.encode(addr), 1_000_000);
+    function requestBalance(address addr) public returns (uint32) {
+        return requestJob(ImageID.ADDRESS_BALANCE_ID, abi.encode(addr), DEFAULT_MAX_CYCLES);
     }
 
     function getBalance(address addr) public view returns (uint256) {
