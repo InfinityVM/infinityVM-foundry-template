@@ -107,7 +107,7 @@ import {{Script, console}} from "forge-std/Script.sol";
 import {{JobManager}} from "../src/JobManager.sol";
 import {{IJobManager}} from "../src/IJobManager.sol";
 import {{Consumer}} from "../src/Consumer.sol";
-import {{MockConsumer}} from "../test/mocks/MockConsumer.sol";
+import {{ExampleConsumer}} from "../src/ExampleConsumer.sol";
 import {{Utils}} from "./utils/Utils.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -120,7 +120,7 @@ contract CoprocessorDeployer is Script, Utils {{
     ProxyAdmin public coprocessorProxyAdmin;
     JobManager public jobManager;
     IJobManager public jobManagerImplementation;
-    MockConsumer public consumer;
+    ExampleConsumer public consumer;
 
     function deployCoprocessorContracts(address relayer, address coprocessorOperator) public {{
         vm.startBroadcast();
@@ -143,7 +143,7 @@ contract CoprocessorDeployer is Script, Utils {{
             )
         );
 
-        consumer = new MockConsumer(address(jobManager));
+        consumer = new ExampleConsumer(address(jobManager));
 
         // Set ELF paths
         {set_elf_paths_code}

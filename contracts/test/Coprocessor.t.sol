@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {JobManager} from "../src/JobManager.sol";
 import {Consumer} from "../src/Consumer.sol";
-import {MockConsumer} from "./mocks/MockConsumer.sol";
+import {ExampleConsumer} from "../src/ExampleConsumer.sol";
 import {CoprocessorDeployer} from "../script/CoprocessorDeployer.s.sol";
 
 contract CoprocessorTest is Test, CoprocessorDeployer {
@@ -12,7 +12,7 @@ contract CoprocessorTest is Test, CoprocessorDeployer {
     address RELAYER = address(1);
     address COPROCESSOR_OPERATOR = 0x184c47137933253f49325B851307Ab1017863BD0;
 
-    event JobCreated(uint32 indexed jobID, uint64 maxCycles, bytes indexed programID, bytes programInput);
+    event JobCreated(uint32 indexed jobID, uint64 maxCycles, bytes32 indexed programID, bytes programInput);
     event JobCancelled(uint32 indexed jobID);
     event JobCompleted(uint32 indexed jobID, bytes result);
 
@@ -35,7 +35,7 @@ contract CoprocessorTest is Test, CoprocessorDeployer {
     function test_Consumer_RequestJob() public {
         vm.expectEmit(true, true, true, true);
         emit JobCreated(1, DEFAULT_MAX_CYCLES, "programID", abi.encode(address(0)));
-        uint32 jobID = consumer.requestBalance("programID", address(0));
+        uint32 jobID = consumer.requestBalance(address(0));
         assertEq(jobID, 1);
         assertEq(consumer.getProgramInputsForJob(jobID), abi.encode(address(0)));
         JobManager.JobMetadata memory jobMetadata = jobManager.getJobMetadata(jobID);
