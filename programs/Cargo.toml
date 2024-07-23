@@ -7,7 +7,7 @@ edition = "2021"
 
 [build-dependencies]
 risc0-build = { workspace = true }
-utils = { path = "../utils" }
+zkvm-utils = { path = "../zkvm-utils" }
 
 [package.metadata.risc0]
 methods = ["guest"]

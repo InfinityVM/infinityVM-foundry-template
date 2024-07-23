@@ -1,5 +1,5 @@
 [package]
-name = "utils"
+name = "zkvm-utils"
 version.workspace = true
 rust-version.workspace = true
 edition.workspace = true

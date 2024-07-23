@@ -14,7 +14,6 @@ import "./utils/EmptyContract.sol";
 // To deploy and verify:
 // forge script CoprocessorDeployer.s.sol:CoprocessorDeployer --sig "deployCoprocessorContracts(address relayer, address coprocessorOperator)" $RELAYER $COPROCESSOR_OPERATOR --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --broadcast -v
 contract CoprocessorDeployer is Script, Utils {
-
     ProxyAdmin public coprocessorProxyAdmin;
     JobManager public jobManager;
     IJobManager public jobManagerImplementation;
@@ -32,17 +31,20 @@ contract CoprocessorDeployer is Script, Utils {
                     address(jobManagerImplementation),
                     address(coprocessorProxyAdmin),
                     abi.encodeWithSelector(
-                        jobManager.initializeJobManager.selector,
-                        msg.sender,
-                        relayer,
-                        coprocessorOperator
+                        jobManager.initializeJobManager.selector, msg.sender, relayer, coprocessorOperator
                     )
                 )
             )
         );
 
         consumer = new MockConsumer(address(jobManager));
+
+        // Set ELF paths
+        jobManager.setElfPath(
+            bytes32(0xb90dc0f5443fb3a1130835342d3be1dbec6a92a6265255f75250eacdb60159da),
+            "/Users/maanavkhaitan/Desktop/mesh-security-avs/infinity-foundry-template/target/riscv-guest/riscv32im-risc0-zkvm-elf/release/address-balance"
+        );
+
         vm.stopBroadcast();
     }
-
 }
