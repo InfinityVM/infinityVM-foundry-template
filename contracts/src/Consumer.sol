@@ -19,7 +19,7 @@ abstract contract Consumer {
     }
 
     function requestJob(
-        bytes memory programID,
+        bytes32 programID,
         bytes memory programInput,
         uint64 maxCycles
     ) internal returns (uint32) {

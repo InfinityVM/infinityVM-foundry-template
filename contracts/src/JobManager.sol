@@ -62,7 +62,7 @@ contract JobManager is
         return imageIDToElfPath[imageID];
     }
 
-    function createJob(bytes calldata programID, bytes calldata programInput, uint64 maxCycles) external override returns (uint32 jobID) {
+    function createJob(bytes32 programID, bytes calldata programInput, uint64 maxCycles) external override returns (uint32 jobID) {
         jobID = jobIDCounter;
         jobIDToMetadata[jobID] = JobMetadata(programID, maxCycles, msg.sender, JOB_STATE_PENDING);
         emit JobCreated(jobID, maxCycles, programID, programInput);
@@ -99,13 +99,13 @@ contract JobManager is
         require(signer == coprocessorOperator, "JobManager.submitResult: Invalid signature");
 
         // Decode the resultWithMetadata using abi.decode
-        (uint32 jobID, bytes32 programInputHash, uint64 maxCycles, bytes memory programID, bytes memory result) = abi.decode(resultWithMetadata, (uint32, bytes32, uint64, bytes, bytes));
+        (uint32 jobID, bytes32 programInputHash, uint64 maxCycles, bytes32 programID, bytes memory result) = abi.decode(resultWithMetadata, (uint32, bytes32, uint64, bytes32, bytes));
 
         JobMetadata memory job = jobIDToMetadata[jobID];
         require(job.status == JOB_STATE_PENDING, "JobManager.submitResult: job is not in pending state");
 
         // This is to prevent coprocessor from using a different program ID to produce a malicious result
-        require(keccak256(job.programID) == keccak256(programID), 
+        require(job.programID == programID, 
             "JobManager.submitResult: program ID signed by coprocessor doesn't match program ID submitted with job");
 
         // This prevents the coprocessor from using arbitrary inputs to produce a malicious result
