@@ -23,6 +23,7 @@ contract JobManager is
     address public coprocessorOperator;
 
     mapping(uint32 => JobMetadata) public jobIDToMetadata;
+    mapping(bytes32 => string) public imageIDToElfPath;
     // storage gap for upgradeability
     uint256[50] private __GAP;
 
@@ -51,6 +52,14 @@ contract JobManager is
 
     function getCoprocessorOperator() external view returns (address) {
         return coprocessorOperator;
+    }
+
+    function setElfPath(bytes32 imageID, string calldata elfPath) external onlyOwner {
+        imageIDToElfPath[imageID] = elfPath;
+    }
+
+    function getElfPath(bytes32 imageID) external view returns (string memory) {
+        return imageIDToElfPath[imageID];
     }
 
     function createJob(bytes calldata programID, bytes calldata programInput, uint64 maxCycles) external override returns (uint32 jobID) {
