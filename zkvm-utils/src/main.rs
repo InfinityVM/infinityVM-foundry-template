@@ -10,7 +10,7 @@ use risc0_zkvm::{
 };
 use alloy_sol_types::{sol, SolType};
 use alloy::{
-    primitives::{keccak256, Address, Signature},
+    primitives::keccak256,
     signers::{local::LocalSigner, Signer},
 };
 use k256::ecdsa::SigningKey;
@@ -40,6 +40,11 @@ enum Command {
 /// Run the CLI.
 #[tokio::main]
 pub async fn main() -> Result<()> {
+    let secret = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    let hex = if secret.starts_with("0x") { &secret[2..] } else { &secret[..] };
+    let decoded = hex::decode(hex)?;
+    let signer = K256LocalSigner::from_slice(&decoded)?;
+
     match Command::parse() {
         Command::Prove {
             guest_binary_path,
@@ -51,6 +56,7 @@ pub async fn main() -> Result<()> {
             hex::decode(input.strip_prefix("0x").unwrap_or(&input))?,
             job_id,
             max_cycles,
+            &signer,
         ).await?,
     };
 
@@ -58,14 +64,14 @@ pub async fn main() -> Result<()> {
 }
 
 /// Prints on stdio the Ethereum ABI and hex encoded proof.
-async fn prove_ffi(elf_path: String, input: Vec<u8>, job_id: u32, max_cycles: u64) -> Result<()> {
+async fn prove_ffi(elf_path: String, input: Vec<u8>, job_id: u32, max_cycles: u64, signer: &K256LocalSigner) -> Result<()> {
     let elf = std::fs::read(elf_path).unwrap();
     let image_id = compute_image_id(&elf)?;
     let image_id_bytes = image_id.as_bytes().try_into().expect("image id is 32 bytes");
     let journal = prove(&elf, &input, max_cycles)?;
     let result_with_metadata = abi_encode_result_with_metadata(job_id, input, max_cycles, image_id_bytes, journal);
     
-    let zkvm_operator_signature = sign_message(&result_with_metadata).await;
+    let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
 
     let calldata = vec![Token::Bytes(result_with_metadata), Token::Bytes(zkvm_operator_signature)];
     let output = hex::encode(ethers::abi::encode(&calldata));
@@ -112,17 +118,13 @@ pub fn abi_encode_result_with_metadata(job_id: u32, program_input: Vec<u8>, max_
     ))
 }
 
-async fn sign_message(msg: &[u8]) -> Vec<u8> {
-    let secret = "0x0c7ec7aefb80022c0025be1e72dadb0679aa294cb1db453b2e7b5da8616b4e31";
-    let hex = if secret[0..2] == *"0x" { &secret[2..] } else { &secret[..] };
-    let decoded = hex::decode(hex).unwrap();
-    let signer = K256LocalSigner::from_slice(&decoded).unwrap();
-    let sig = signer.sign_message(msg).await.unwrap();
+async fn sign_message(msg: &[u8], signer: &K256LocalSigner) -> Result<Vec<u8>> {
+    let sig = signer.sign_message(msg).await?;
 
     // Get the R, S, V components
     let r: [u8; 32] = sig.clone().r().to_be_bytes();
     let s : [u8; 32]= sig.clone().s().to_be_bytes();
-    let mut v = sig.recovery_id().to_byte();
+    let mut v = sig.recid().to_byte();
     v += 27;
 
     // Concatenate R, S, and V to form a 65-byte signature
@@ -131,5 +133,5 @@ async fn sign_message(msg: &[u8]) -> Vec<u8> {
     out.extend_from_slice(&s);
     out.push(v);
 
-    out
+    Ok(out)
 }

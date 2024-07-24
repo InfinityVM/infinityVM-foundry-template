@@ -10,7 +10,7 @@ import {CoprocessorDeployer} from "../script/CoprocessorDeployer.s.sol";
 contract CoprocessorTest is Test, CoprocessorDeployer {
     uint64 DEFAULT_MAX_CYCLES = 1_000_000;
     address RELAYER = address(1);
-    address COPROCESSOR_OPERATOR = 0xaF6Bcd673C742723391086C1e91f0B29141D2381;
+    address COPROCESSOR_OPERATOR = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
     event JobCreated(uint32 indexed jobID, uint64 maxCycles, bytes32 indexed programID, bytes programInput);
     event JobCancelled(uint32 indexed jobID);
