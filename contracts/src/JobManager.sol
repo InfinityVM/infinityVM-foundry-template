@@ -8,14 +8,19 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 import {Initializable} from "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 import "./Utils.sol";
 import {Script, console} from "forge-std/Script.sol";
+import {Test} from "forge-std/Test.sol";
+import {StdCheatsSafe} from "forge-std/StdCheats.sol";
+import {CommonBase} from "forge-std/Base.sol";
 
 contract JobManager is 
     IJobManager,
     Initializable,
     OwnableUpgradeable, 
-    ReentrancyGuard
+    ReentrancyGuard,
+    CommonBase
 {
     using Utils for uint;
+    using Utils for bytes;
 
     uint32 internal jobIDCounter;
     address public relayer;
@@ -62,13 +67,31 @@ contract JobManager is
         return imageIDToElfPath[imageID];
     }
 
-    function createJob(bytes32 programID, bytes calldata programInput, uint64 maxCycles) external override returns (uint32 jobID) {
+    function prove(string memory elf_path, bytes memory input) internal returns (bytes memory, bytes memory) {
+        string[] memory imageRunnerInput = new string[](10);
+        uint256 i = 0;
+        imageRunnerInput[i++] = "cargo";
+        imageRunnerInput[i++] = "run";
+        imageRunnerInput[i++] = "--manifest-path";
+        imageRunnerInput[i++] = "../zkvm-utils/Cargo.toml";
+        imageRunnerInput[i++] = "--bin";
+        imageRunnerInput[i++] = "zkvm-utils";
+        imageRunnerInput[i++] = "-q";
+        imageRunnerInput[i++] = "prove";
+        imageRunnerInput[i++] = elf_path;
+        imageRunnerInput[i++] = input.toHexString();
+        return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes));
+    }
+
+    function createJob(bytes32 programID, bytes memory programInput, uint64 maxCycles) external override returns (uint32 jobID) {
         jobID = jobIDCounter;
         jobIDToMetadata[jobID] = JobMetadata(programID, maxCycles, msg.sender, JOB_STATE_PENDING);
         string memory elfPath = getElfPath(programID);
-        // TODO: Call prove() here
         emit JobCreated(jobID, maxCycles, programID, programInput);
         jobIDCounter++;
+
+        (bytes memory result, bytes memory signature) = prove(elfPath, programInput);
+        submitResult(result, signature);
     }
 
     function getJobMetadata(uint32 jobID) public view returns (JobMetadata memory) {
@@ -89,37 +112,40 @@ contract JobManager is
 
     // This function is called by the relayer
     function submitResult(
-        bytes calldata resultWithMetadata, // Includes job ID + program input hash + max cycles + program ID + result value
-        bytes calldata signature
-    ) external override nonReentrant {
-        require(msg.sender == relayer, "JobManager.submitResult: caller is not the relayer");
+        bytes memory resultWithMetadata, // Includes job ID + program input hash + max cycles + program ID + result value
+        bytes memory signature
+    ) public override nonReentrant {
+        // require(msg.sender == relayer, "JobManager.submitResult: caller is not the relayer");
 
-        // Recover the signer address
-        // resultWithMetadata.length needs to be converted to string since the EIP-191 standard requires this 
-        bytes32 messageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", resultWithMetadata.length.uintToString(), resultWithMetadata));
-        address signer = recoverSigner(messageHash, signature);
-        require(signer == coprocessorOperator, "JobManager.submitResult: Invalid signature");
+        // // Recover the signer address
+        // // resultWithMetadata.length needs to be converted to string since the EIP-191 standard requires this 
+        // bytes32 messageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", resultWithMetadata.length.uintToString(), resultWithMetadata));
+        // address signer = recoverSigner(messageHash, signature);
+        // require(signer == coprocessorOperator, "JobManager.submitResult: Invalid signature");
 
         // Decode the resultWithMetadata using abi.decode
-        (uint32 jobID, bytes32 programInputHash, uint64 maxCycles, bytes32 programID, bytes memory result) = abi.decode(resultWithMetadata, (uint32, bytes32, uint64, bytes32, bytes));
+        // (uint32 jobID, bytes32 programInputHash, uint64 maxCycles, bytes32 programID, bytes memory result) = abi.decode(resultWithMetadata, (uint32, bytes32, uint64, bytes32, bytes));
 
-        JobMetadata memory job = jobIDToMetadata[jobID];
-        require(job.status == JOB_STATE_PENDING, "JobManager.submitResult: job is not in pending state");
+        // JobMetadata memory job = jobIDToMetadata[jobID];
+        // require(job.status == JOB_STATE_PENDING, "JobManager.submitResult: job is not in pending state");
 
-        // This is to prevent coprocessor from using a different program ID to produce a malicious result
-        require(job.programID == programID, 
-            "JobManager.submitResult: program ID signed by coprocessor doesn't match program ID submitted with job");
+        // // This is to prevent coprocessor from using a different program ID to produce a malicious result
+        // require(job.programID == programID, 
+        //     "JobManager.submitResult: program ID signed by coprocessor doesn't match program ID submitted with job");
 
-        // This prevents the coprocessor from using arbitrary inputs to produce a malicious result
-        require(keccak256(Consumer(job.caller).getProgramInputsForJob(jobID)) == programInputHash, 
-            "JobManager.submitResult: program input signed by coprocessor doesn't match program input submitted with job");
+        // // This prevents the coprocessor from using arbitrary inputs to produce a malicious result
+        // require(keccak256(Consumer(job.caller).getProgramInputsForJob(jobID)) == programInputHash, 
+        //     "JobManager.submitResult: program input signed by coprocessor doesn't match program input submitted with job");
 
-        job.status = JOB_STATE_COMPLETED;
-        jobIDToMetadata[jobID] = job;
+        // job.status = JOB_STATE_COMPLETED;
+        // jobIDToMetadata[jobID] = job;
 
-        emit JobCompleted(jobID, result);
+        // emit JobCompleted(jobID, result);
 
-        Consumer(job.caller).receiveResult(jobID, result);
+        // Consumer(job.caller).receiveResult(jobID, result);
+        (address addr, uint256 balance) = abi.decode(resultWithMetadata, (address, uint256));
+        console.log("NARULA addr: ", addr);
+        console.log("NARULA balance: ", balance);
     }
 
     function recoverSigner(bytes32 _ethSignedMessageHash, bytes memory _signature) internal pure returns (address) {
