@@ -114,15 +114,15 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
 import "./utils/EmptyContract.sol";
 
 // To deploy and verify:
-// forge script CoprocessorDeployer.s.sol:CoprocessorDeployer --sig "deployCoprocessorContracts(address relayer, address coprocessorOperator)" $RELAYER $COPROCESSOR_OPERATOR --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --broadcast -v
-contract CoprocessorDeployer is Script, Utils {{
+// forge script Deployer.s.sol:Deployer --sig "deployContracts(address relayer, address coprocessorOperator)" $RELAYER $COPROCESSOR_OPERATOR --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --broadcast -v
+contract Deployer is Script, Utils {{
 
     ProxyAdmin public coprocessorProxyAdmin;
     JobManager public jobManager;
     IJobManager public jobManagerImplementation;
     ExampleConsumer public consumer;
 
-    function deployCoprocessorContracts(address relayer, address coprocessorOperator) public {{
+    function deployContracts(address relayer, address coprocessorOperator) public {{
         vm.startBroadcast();
         // deploy proxy admin for ability to upgrade proxy contracts
         coprocessorProxyAdmin = new ProxyAdmin();

@@ -29,6 +29,8 @@ abstract contract Consumer {
         return jobID;
     }
 
+    // CancelJob is not useful in the current Foundry template since createJob in the JobManager
+    // calls submitResult directly, so there's no way to cancel a job before it's completed.
     function cancelJob(uint32 jobID) internal {
         _jobManager.cancelJob(jobID);
     }

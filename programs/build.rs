@@ -2,7 +2,7 @@ use zkvm_utils::sol::{generate_solidity_files, Options};
 
 // Paths where the generated Solidity files will be written.
 const SOLIDITY_IMAGE_ID_PATH: &str = "../contracts/src/ImageID.sol";
-const SOLIDITY_DEPLOY_SCRIPT_PATH: &str = "../contracts/script/CoprocessorDeployer.s.sol";
+const SOLIDITY_DEPLOY_SCRIPT_PATH: &str = "../contracts/script/Deployer.s.sol";
 
 fn main() {
     let guests = risc0_build::embed_methods();

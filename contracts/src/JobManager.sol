@@ -87,6 +87,8 @@ contract JobManager is
         return jobIDToMetadata[jobID];
     }
 
+    // CancelJob is not useful in the current Foundry template since createJob calls submitResult directly,
+    // so there's no way to cancel a job before it's completed.
     function cancelJob(uint32 jobID) external override {
         JobMetadata memory job = jobIDToMetadata[jobID];
         // We allow the JobManager owner to also cancel jobs so Ethos admin can veto any jobs
@@ -99,7 +101,6 @@ contract JobManager is
         emit JobCancelled(jobID);
     }
 
-    // This function is called by the relayer
     function submitResult(
         bytes memory resultWithMetadata, // Includes job ID + program input hash + max cycles + program ID + result value
         bytes memory signature
