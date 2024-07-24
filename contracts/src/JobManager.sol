@@ -138,7 +138,7 @@ contract JobManager is
         imageRunnerInput[i++] = "--bin";
         imageRunnerInput[i++] = "zkvm-utils";
         imageRunnerInput[i++] = "-q";
-        imageRunnerInput[i++] = "prove";
+        imageRunnerInput[i++] = "execute";
         imageRunnerInput[i++] = elf_path;
         imageRunnerInput[i++] = input.toHexString();
         imageRunnerInput[i++] = jobID.uintToString();

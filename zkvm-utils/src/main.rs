@@ -21,8 +21,8 @@ type K256LocalSigner = LocalSigner<SigningKey>;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 enum Command {
-    /// Prove the RISC-V ELF binary.
-    Prove {
+    /// Execute the RISC-V ELF binary.
+    Execute {
         /// The guest binary path
         guest_binary_path: String,
 
@@ -46,12 +46,12 @@ pub async fn main() -> Result<()> {
     let signer = K256LocalSigner::from_slice(&decoded)?;
 
     match Command::parse() {
-        Command::Prove {
+        Command::Execute {
             guest_binary_path,
             input,
             job_id,
             max_cycles
-        } => prove_ffi(
+        } => execute_ffi(
             guest_binary_path,
             hex::decode(input.strip_prefix("0x").unwrap_or(&input))?,
             job_id,
@@ -63,12 +63,12 @@ pub async fn main() -> Result<()> {
     Ok(())
 }
 
-/// Prints on stdio the Ethereum ABI and hex encoded proof.
-async fn prove_ffi(elf_path: String, input: Vec<u8>, job_id: u32, max_cycles: u64, signer: &K256LocalSigner) -> Result<()> {
+/// Prints on stdio the Ethereum ABI and hex encoded result.
+async fn execute_ffi(elf_path: String, input: Vec<u8>, job_id: u32, max_cycles: u64, signer: &K256LocalSigner) -> Result<()> {
     let elf = std::fs::read(elf_path).unwrap();
     let image_id = compute_image_id(&elf)?;
     let image_id_bytes = image_id.as_bytes().try_into().expect("image id is 32 bytes");
-    let journal = prove(&elf, &input, max_cycles)?;
+    let journal = execute(&elf, &input, max_cycles)?;
     let result_with_metadata = abi_encode_result_with_metadata(job_id, input, max_cycles, image_id_bytes, journal);
     
     let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
@@ -85,7 +85,7 @@ async fn prove_ffi(elf_path: String, input: Vec<u8>, job_id: u32, max_cycles: u6
 }
 
 /// Generates journal for the given elf and input.
-fn prove(elf: &[u8], input: &[u8], max_cycles: u64) -> Result<Vec<u8>> {
+fn execute(elf: &[u8], input: &[u8], max_cycles: u64) -> Result<Vec<u8>> {
     let env = ExecutorEnv::builder()
     .session_limit(Some(max_cycles))
     .write_slice(input)
