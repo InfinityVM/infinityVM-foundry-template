@@ -77,8 +77,8 @@ contract JobManager is
         jobIDCounter++;
 
         // This would normally be a separate call by relayer, but for tests we call it here
-        bytes memory resultWithMetadata = prove(elfPath, programInput, jobID, maxCycles);
-        submitResult(resultWithMetadata, programInput);
+        (bytes memory resultWithMetadata, bytes memory signature) = prove(elfPath, programInput, jobID, maxCycles);
+        submitResult(resultWithMetadata, signature);
 
         return jobID;
     }
@@ -104,11 +104,11 @@ contract JobManager is
         bytes memory resultWithMetadata, // Includes job ID + program input hash + max cycles + program ID + result value
         bytes memory signature
     ) public override nonReentrant {
-        // // Recover the signer address
-        // // resultWithMetadata.length needs to be converted to string since the EIP-191 standard requires this 
-        // bytes32 messageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", resultWithMetadata.length.uintToString(), resultWithMetadata));
-        // address signer = recoverSigner(messageHash, signature);
-        // require(signer == coprocessorOperator, "JobManager.submitResult: Invalid signature");
+        // Recover the signer address
+        // resultWithMetadata.length needs to be converted to string since the EIP-191 standard requires this 
+        bytes32 messageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", resultWithMetadata.length.uintToString(), resultWithMetadata));
+        address signer = recoverSigner(messageHash, signature);
+        require(signer == coprocessorOperator, "JobManager.submitResult: Invalid signature");
 
         // Decode the resultWithMetadata using abi.decode
         (uint32 jobID, bytes32 programInputHash, uint64 maxCycles, bytes32 programID, bytes memory result) = abi.decode(resultWithMetadata, (uint32, bytes32, uint64, bytes32, bytes));
@@ -128,7 +128,7 @@ contract JobManager is
         Consumer(job.caller).receiveResult(jobID, result);
     }
 
-    function prove(string memory elf_path, bytes memory input, uint32 jobID, uint64 maxCycles) internal returns (bytes memory) {
+    function prove(string memory elf_path, bytes memory input, uint32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
         string[] memory imageRunnerInput = new string[](12);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
@@ -143,7 +143,7 @@ contract JobManager is
         imageRunnerInput[i++] = input.toHexString();
         imageRunnerInput[i++] = jobID.uintToString();
         imageRunnerInput[i++] = maxCycles.uintToString();
-        return abi.decode(vm.ffi(imageRunnerInput), (bytes));
+        return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes));
     }
 
     function recoverSigner(bytes32 _ethSignedMessageHash, bytes memory _signature) internal pure returns (address) {
