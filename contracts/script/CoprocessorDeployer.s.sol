@@ -41,7 +41,7 @@ contract CoprocessorDeployer is Script, Utils {
 
         // Set ELF paths
         jobManager.setElfPath(
-            bytes32(0x6b1d0f2d17fd5a1fb0495672e2808ac9b055d7f8fd988e531afa8f44c280ce76),
+            bytes32(0xf413ab25c9ce7fe3e85448336135f0885c1cab35df0c444e11550f504d8f22ff),
             "/Users/maanavkhaitan/Desktop/mesh-security-avs/infinity-foundry-template/target/riscv-guest/riscv32im-risc0-zkvm-elf/release/address-balance"
         );
 
