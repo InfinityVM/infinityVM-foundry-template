@@ -43,8 +43,8 @@ impl Options {
 
 /// Generate Solidity files for integrating a InfinityVM project.
 pub fn generate_solidity_files(guests: &[GuestListEntry], opts: &Options) -> Result<()> {
-    // Skip Solidity source files generation if RISC0_SKIP_BUILD is enabled.
-    if env::var("RISC0_SKIP_BUILD").is_ok() {
+    // Skip Solidity source files generation if INFINITY_SKIP_BUILD is enabled.
+    if env::var("INFINITY_SKIP_BUILD").is_ok() {
         return Ok(());
     }
 

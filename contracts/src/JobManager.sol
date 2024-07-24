@@ -135,7 +135,7 @@ contract JobManager is
         imageRunnerInput[i++] = "cargo";
         imageRunnerInput[i++] = "run";
         imageRunnerInput[i++] = "--manifest-path";
-        imageRunnerInput[i++] = "../zkvm-utils/Cargo.toml";
+        imageRunnerInput[i++] = "zkvm-utils/Cargo.toml";
         imageRunnerInput[i++] = "--bin";
         imageRunnerInput[i++] = "zkvm-utils";
         imageRunnerInput[i++] = "-q";
