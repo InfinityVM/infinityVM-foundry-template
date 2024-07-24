@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 import {JobManager} from "./JobManager.sol";
 import {Consumer} from "./Consumer.sol";
 import {ImageID} from "./ImageID.sol"; 
+import {console} from "forge-std/Script.sol";
 
 contract ExampleConsumer is Consumer {
 

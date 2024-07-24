@@ -135,6 +135,7 @@ risc0-zkvm = { version = "1", features = ["prove"], default-features = false }
 risc0-build = { version = "1", default-features = false }
 risc0-zkp = { version = "1.0", default-features = false }
 risc0-build-ethereum = { git = "https://github.com/risc0/risc0-ethereum", tag = "v1.0.0" }
+risc0-ethereum-contracts = { git = "https://github.com/risc0/risc0-ethereum", tag = "v1.0.0" }
 risc0-binfmt = { version = "1", default-features = false }
 rand = { version = "0.8", default-features = false }
 reth-db = { git = "https://github.com/paradigmxyz/reth.git", rev = "d8b104f", features = ["mdbx"], default-features = false}

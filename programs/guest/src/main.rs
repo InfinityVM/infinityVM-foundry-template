@@ -15,16 +15,12 @@
 use std::io::Read;
 
 use alloy_primitives::{U256, Address};
-use alloy_sol_types::{sol, SolType, SolValue, sol_data::*};
+use alloy_sol_types::{sol, SolType};
 use risc0_zkvm::guest::env;
 
 type AddressEncodeable = sol! {
     address
 };
-
-fn abi_encode_address(address: Address) -> Vec<u8> {
-    AddressEncodeable::abi_encode(&address)
-}
 
 type AddressWithBalance = sol! {
     tuple(address,uint256)
@@ -45,8 +41,7 @@ fn main() {
     let address: Address = Address::from(address_bytes);
 
     // set balance
-    let address_u256 = U256::from_be_bytes(address_bytes);
-    let balance = address_u256 % U256::from(10000000);
+    let balance = U256::from(10000000);
 
     // Commit the journal that will be received by the application contract.
     // Journal is encoded using Solidity ABI for easy decoding in the app contract.

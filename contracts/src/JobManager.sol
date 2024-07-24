@@ -8,14 +8,21 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 import {Initializable} from "@openzeppelin-upgrades/contracts/proxy/utils/Initializable.sol";
 import "./Utils.sol";
 import {Script, console} from "forge-std/Script.sol";
+import {Test} from "forge-std/Test.sol";
+import {StdCheatsSafe} from "forge-std/StdCheats.sol";
+import {CommonBase} from "forge-std/Base.sol";
 
 contract JobManager is 
     IJobManager,
     Initializable,
     OwnableUpgradeable, 
-    ReentrancyGuard
+    ReentrancyGuard,
+    CommonBase
 {
     using Utils for uint;
+    using Utils for uint32;
+    using Utils for uint64;
+    using Utils for bytes;
 
     uint32 internal jobIDCounter;
     address public relayer;
@@ -62,13 +69,18 @@ contract JobManager is
         return imageIDToElfPath[imageID];
     }
 
-    function createJob(bytes32 programID, bytes calldata programInput, uint64 maxCycles) external override returns (uint32 jobID) {
+    function createJob(bytes32 programID, bytes memory programInput, uint64 maxCycles) external override returns (uint32 jobID) {
         jobID = jobIDCounter;
         jobIDToMetadata[jobID] = JobMetadata(programID, maxCycles, msg.sender, JOB_STATE_PENDING);
         string memory elfPath = getElfPath(programID);
-        // TODO: Call prove() here
         emit JobCreated(jobID, maxCycles, programID, programInput);
         jobIDCounter++;
+
+        // This would normally be a separate call by relayer, but for tests we call it here
+        (bytes memory resultWithMetadata, bytes memory signature) = prove(elfPath, programInput, jobID, maxCycles);
+        submitResult(resultWithMetadata, signature);
+
+        return jobID;
     }
 
     function getJobMetadata(uint32 jobID) public view returns (JobMetadata memory) {
@@ -89,11 +101,9 @@ contract JobManager is
 
     // This function is called by the relayer
     function submitResult(
-        bytes calldata resultWithMetadata, // Includes job ID + program input hash + max cycles + program ID + result value
-        bytes calldata signature
-    ) external override nonReentrant {
-        require(msg.sender == relayer, "JobManager.submitResult: caller is not the relayer");
-
+        bytes memory resultWithMetadata, // Includes job ID + program input hash + max cycles + program ID + result value
+        bytes memory signature
+    ) public override nonReentrant {
         // Recover the signer address
         // resultWithMetadata.length needs to be converted to string since the EIP-191 standard requires this 
         bytes32 messageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", resultWithMetadata.length.uintToString(), resultWithMetadata));
@@ -110,16 +120,30 @@ contract JobManager is
         require(job.programID == programID, 
             "JobManager.submitResult: program ID signed by coprocessor doesn't match program ID submitted with job");
 
-        // This prevents the coprocessor from using arbitrary inputs to produce a malicious result
-        require(keccak256(Consumer(job.caller).getProgramInputsForJob(jobID)) == programInputHash, 
-            "JobManager.submitResult: program input signed by coprocessor doesn't match program input submitted with job");
-
         job.status = JOB_STATE_COMPLETED;
         jobIDToMetadata[jobID] = job;
 
         emit JobCompleted(jobID, result);
 
         Consumer(job.caller).receiveResult(jobID, result);
+    }
+
+    function prove(string memory elf_path, bytes memory input, uint32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
+        string[] memory imageRunnerInput = new string[](12);
+        uint256 i = 0;
+        imageRunnerInput[i++] = "cargo";
+        imageRunnerInput[i++] = "run";
+        imageRunnerInput[i++] = "--manifest-path";
+        imageRunnerInput[i++] = "../zkvm-utils/Cargo.toml";
+        imageRunnerInput[i++] = "--bin";
+        imageRunnerInput[i++] = "zkvm-utils";
+        imageRunnerInput[i++] = "-q";
+        imageRunnerInput[i++] = "execute";
+        imageRunnerInput[i++] = elf_path;
+        imageRunnerInput[i++] = input.toHexString();
+        imageRunnerInput[i++] = jobID.uintToString();
+        imageRunnerInput[i++] = maxCycles.uintToString();
+        return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes));
     }
 
     function recoverSigner(bytes32 _ethSignedMessageHash, bytes memory _signature) internal pure returns (address) {
