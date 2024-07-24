@@ -6835,6 +6835,7 @@ dependencies = [
  "prost 0.13.1",
  "reth-db",
  "reth-db-api",
+ "risc0-binfmt",
  "risc0-build",
  "risc0-ethereum-contracts",
  "risc0-zkp",
