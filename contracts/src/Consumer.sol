@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 import {JobManager} from "./JobManager.sol";
+import {console} from "forge-std/Script.sol";
 
 abstract contract Consumer {
     JobManager internal _jobManager;
