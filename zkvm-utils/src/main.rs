@@ -1,4 +1,4 @@
-//! Functions to generate result from zkVM given ELF and input.
+//! Functions to execute a zkVM program on a given input.
 
 use std::io::Write;
 
