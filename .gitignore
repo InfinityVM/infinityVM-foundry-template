@@ -2,7 +2,7 @@
 .idea/
 
 # Compiler files
-contracts/cache/
+cache/
 contracts/out/
 contracts/data/
 

@@ -30,7 +30,7 @@ contract JobManager is
     address public coprocessorOperator;
 
     mapping(uint32 => JobMetadata) public jobIDToMetadata;
-    mapping(bytes32 => string) public imageIDToElfPath;
+    mapping(bytes32 => string) public programIDToElfPath;
     // storage gap for upgradeability
     uint256[50] private __GAP;
 
@@ -61,12 +61,12 @@ contract JobManager is
         return coprocessorOperator;
     }
 
-    function setElfPath(bytes32 imageID, string calldata elfPath) external onlyOwner {
-        imageIDToElfPath[imageID] = elfPath;
+    function setElfPath(bytes32 programID, string calldata elfPath) external onlyOwner {
+        programIDToElfPath[programID] = elfPath;
     }
 
-    function getElfPath(bytes32 imageID) public view returns (string memory) {
-        return imageIDToElfPath[imageID];
+    function getElfPath(bytes32 programID) public view returns (string memory) {
+        return programIDToElfPath[programID];
     }
 
     function createJob(bytes32 programID, bytes memory programInput, uint64 maxCycles) external override returns (uint32 jobID) {
@@ -87,6 +87,8 @@ contract JobManager is
         return jobIDToMetadata[jobID];
     }
 
+    // CancelJob is not useful in the current Foundry template since createJob calls submitResult directly,
+    // so there's no way to cancel a job before it's completed.
     function cancelJob(uint32 jobID) external override {
         JobMetadata memory job = jobIDToMetadata[jobID];
         // We allow the JobManager owner to also cancel jobs so Ethos admin can veto any jobs
@@ -99,7 +101,6 @@ contract JobManager is
         emit JobCancelled(jobID);
     }
 
-    // This function is called by the relayer
     function submitResult(
         bytes memory resultWithMetadata, // Includes job ID + program input hash + max cycles + program ID + result value
         bytes memory signature
@@ -134,7 +135,7 @@ contract JobManager is
         imageRunnerInput[i++] = "cargo";
         imageRunnerInput[i++] = "run";
         imageRunnerInput[i++] = "--manifest-path";
-        imageRunnerInput[i++] = "../zkvm-utils/Cargo.toml";
+        imageRunnerInput[i++] = "zkvm-utils/Cargo.toml";
         imageRunnerInput[i++] = "--bin";
         imageRunnerInput[i++] = "zkvm-utils";
         imageRunnerInput[i++] = "-q";

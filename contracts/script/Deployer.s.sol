@@ -12,14 +12,14 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
 import "./utils/EmptyContract.sol";
 
 // To deploy and verify:
-// forge script CoprocessorDeployer.s.sol:CoprocessorDeployer --sig "deployCoprocessorContracts(address relayer, address coprocessorOperator)" $RELAYER $COPROCESSOR_OPERATOR --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --broadcast -v
-contract CoprocessorDeployer is Script, Utils {
+// forge script Deployer.s.sol:Deployer --sig "deployContracts(address relayer, address coprocessorOperator)" $RELAYER $COPROCESSOR_OPERATOR --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --broadcast -v
+contract Deployer is Script, Utils {
     ProxyAdmin public coprocessorProxyAdmin;
     JobManager public jobManager;
     IJobManager public jobManagerImplementation;
     ExampleConsumer public consumer;
 
-    function deployCoprocessorContracts(address relayer, address coprocessorOperator) public {
+    function deployContracts(address relayer, address coprocessorOperator) public {
         vm.startBroadcast();
         // deploy proxy admin for ability to upgrade proxy contracts
         coprocessorProxyAdmin = new ProxyAdmin();
@@ -41,8 +41,8 @@ contract CoprocessorDeployer is Script, Utils {
 
         // Set ELF paths
         jobManager.setElfPath(
-            bytes32(0x6b1d0f2d17fd5a1fb0495672e2808ac9b055d7f8fd988e531afa8f44c280ce76),
-            "/Users/maanavkhaitan/Desktop/mesh-security-avs/infinity-foundry-template/target/riscv-guest/riscv32im-risc0-zkvm-elf/release/address-balance"
+            bytes32(0x088098fbcf93c34f6d7bdb1af81dabcf4535c2b85aee71f3be6e258e6f9e1296),
+            "/Users/maanavkhaitan/Desktop/mesh-security-avs/infinity-foundry-template/target/riscv-guest/riscv32im-risc0-zkvm-elf/release/square-root"
         );
 
         vm.stopBroadcast();

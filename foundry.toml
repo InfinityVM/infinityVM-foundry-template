@@ -1,0 +1,15 @@
+[profile.default]
+src = "contracts/src"
+out = "contracts/out"
+libs = ["contracts/lib"]
+test = "contracts/test"
+solc_version = "0.8.13"
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+remappings = [
+    "@openzeppelin-upgrades/=contracts/lib/openzeppelin-contracts-upgradeable/",
+    "@openzeppelin/=contracts/lib/openzeppelin-contracts/",
+]
+
+fs_permissions = [{ access = "read-write", path = "./"}]
