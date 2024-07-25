@@ -28,7 +28,7 @@ git clone --recursive https://github.com/risc0/risc0-foundry-template.git
 
 ### Write a Rust program to run in the coprocessor
 
-All application programs run by the coprocessor live in `programs/guest/src`. For our square root application, we have a `square-root.rs` program which takes in an integer and returns the square root. This program is also a good example of how to accept inputs and return output.
+All application programs run by the coprocessor live in `programs/app/src`. For our square root application, we have a `square-root.rs` program which takes in an integer and returns the square root. This program is also a good example of how to accept inputs and return output.
 
 This is a simple example but you could write a lot more interesting and complex code in your Rust programs.
 

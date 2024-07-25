@@ -3,6 +3,7 @@
 
 # Compiler files
 cache/
+contracts/cache/
 contracts/out/
 contracts/data/
 
