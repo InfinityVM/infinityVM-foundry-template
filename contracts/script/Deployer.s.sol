@@ -41,8 +41,8 @@ contract Deployer is Script, Utils {
 
         // Set ELF paths
         jobManager.setElfPath(
-            bytes32(0x0483434ab44c29f10383fb6760220f7fb916a62ca048ef10fccd381585a920cf),
-            "/Users/maanavkhaitan/Desktop/mesh-security-avs/infinity-foundry-template/target/riscv-guest/riscv32im-risc0-zkvm-elf/release/address-balance"
+            bytes32(0x088098fbcf93c34f6d7bdb1af81dabcf4535c2b85aee71f3be6e258e6f9e1296),
+            "/Users/maanavkhaitan/Desktop/mesh-security-avs/infinity-foundry-template/target/riscv-guest/riscv32im-risc0-zkvm-elf/release/square-root"
         );
 
         vm.stopBroadcast();

@@ -1,6 +1,5 @@
 pragma solidity ^0.8.13;
 
 library ImageID {
-    bytes32 public constant ADDRESS_BALANCE_ID =
-        bytes32(0x0483434ab44c29f10383fb6760220f7fb916a62ca048ef10fccd381585a920cf);
+    bytes32 public constant SQUARE_ROOT_ID = bytes32(0x088098fbcf93c34f6d7bdb1af81dabcf4535c2b85aee71f3be6e258e6f9e1296);
 }

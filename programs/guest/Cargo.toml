@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "address-balance"
-path = "src/address-balance.rs"
+name = "square-root"
+path = "src/square-root.rs"
 
 [workspace]
 

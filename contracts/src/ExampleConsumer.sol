@@ -7,19 +7,19 @@ import {console} from "forge-std/Script.sol";
 
 contract ExampleConsumer is Consumer {
 
-    mapping(address => uint256) public addressToBalance;
+    mapping(uint256 => uint256) public numberToSquareRoot;
     mapping(uint32 => bytes) public jobIDToResult;
 
     uint64 public constant DEFAULT_MAX_CYCLES = 1_000_000;
 
     constructor(address jobManager) Consumer(jobManager) {}
 
-    function requestBalance(address addr) public returns (uint32) {
-        return requestJob(ImageID.ADDRESS_BALANCE_ID, abi.encode(addr), DEFAULT_MAX_CYCLES);
+    function requestSquareRoot(uint256 number) public returns (uint32) {
+        return requestJob(ImageID.SQUARE_ROOT_ID, abi.encode(number), DEFAULT_MAX_CYCLES);
     }
 
-    function getBalance(address addr) public view returns (uint256) {
-        return addressToBalance[addr];
+    function getSquareRoot(uint256 number) public view returns (uint256) {
+        return numberToSquareRoot[number];
     }
 
     function getJobResult(uint32 jobID) public view returns (bytes memory) {
@@ -28,10 +28,10 @@ contract ExampleConsumer is Consumer {
 
     function _receiveResult(uint32 jobID, bytes memory result) internal override {
         // Decode the coprocessor result into AddressWithBalance
-        (address addr, uint256 balance) = abi.decode(result, (address, uint256));
+        (uint256 originalNumber, uint256 squareRoot) = abi.decode(result, (uint256, uint256));
 
         // Perform app-specific logic using the result
-        addressToBalance[addr] = balance;
+        numberToSquareRoot[originalNumber] = squareRoot;
         jobIDToResult[jobID] = result;
     }
 
