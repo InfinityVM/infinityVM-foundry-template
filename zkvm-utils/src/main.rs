@@ -2,19 +2,17 @@
 
 use std::io::Write;
 
-use anyhow::{Context, Result};
-use clap::Parser;
-use ethers::abi::Token;
-use risc0_zkvm::{
-    Executor, ExecutorEnv, LocalProver,
-};
-use alloy_sol_types::{sol, SolType};
 use alloy::{
     primitives::keccak256,
     signers::{local::LocalSigner, Signer},
 };
+use alloy_sol_types::{sol, SolType};
+use anyhow::{Context, Result};
+use clap::Parser;
+use ethers::abi::Token;
 use k256::ecdsa::SigningKey;
 use risc0_binfmt::compute_image_id;
+use risc0_zkvm::{Executor, ExecutorEnv, LocalProver};
 
 type K256LocalSigner = LocalSigner<SigningKey>;
 
@@ -46,31 +44,36 @@ pub async fn main() -> Result<()> {
     let signer = K256LocalSigner::from_slice(&decoded)?;
 
     match Command::parse() {
-        Command::Execute {
-            guest_binary_path,
-            input,
-            job_id,
-            max_cycles
-        } => execute_ffi(
-            guest_binary_path,
-            hex::decode(input.strip_prefix("0x").unwrap_or(&input))?,
-            job_id,
-            max_cycles,
-            &signer,
-        ).await?,
+        Command::Execute { guest_binary_path, input, job_id, max_cycles } => {
+            execute_ffi(
+                guest_binary_path,
+                hex::decode(input.strip_prefix("0x").unwrap_or(&input))?,
+                job_id,
+                max_cycles,
+                &signer,
+            )
+            .await?
+        }
     };
 
     Ok(())
 }
 
 /// Prints on stdio the Ethereum ABI and hex encoded result.
-async fn execute_ffi(elf_path: String, input: Vec<u8>, job_id: u32, max_cycles: u64, signer: &K256LocalSigner) -> Result<()> {
+async fn execute_ffi(
+    elf_path: String,
+    input: Vec<u8>,
+    job_id: u32,
+    max_cycles: u64,
+    signer: &K256LocalSigner,
+) -> Result<()> {
     let elf = std::fs::read(elf_path).unwrap();
     let program_id = compute_image_id(&elf)?;
     let program_id_bytes = program_id.as_bytes().try_into().expect("program id is 32 bytes");
     let journal = execute(&elf, &input, max_cycles)?;
-    let result_with_metadata = abi_encode_result_with_metadata(job_id, input, max_cycles, program_id_bytes, journal);
-    
+    let result_with_metadata =
+        abi_encode_result_with_metadata(job_id, input, max_cycles, program_id_bytes, journal);
+
     let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
 
     let calldata = vec![Token::Bytes(result_with_metadata), Token::Bytes(zkvm_operator_signature)];
@@ -78,18 +81,13 @@ async fn execute_ffi(elf_path: String, input: Vec<u8>, job_id: u32, max_cycles: 
 
     // Forge test FFI calls expect hex encoded bytes sent to stdout
     print!("{output}");
-    std::io::stdout()
-        .flush()
-        .context("failed to flush stdout buffer")?;
+    std::io::stdout().flush().context("failed to flush stdout buffer")?;
     Ok(())
 }
 
 /// Generates journal for the given elf and input.
 fn execute(elf: &[u8], input: &[u8], max_cycles: u64) -> Result<Vec<u8>> {
-    let env = ExecutorEnv::builder()
-    .session_limit(Some(max_cycles))
-    .write_slice(input)
-    .build()?;
+    let env = ExecutorEnv::builder().session_limit(Some(max_cycles)).write_slice(input).build()?;
 
     let prover = LocalProver::new("locals only");
     let prove_info = prover.execute(env, elf)?;
@@ -107,7 +105,13 @@ pub type ResultWithMetadata = sol! {
 
 /// Returns an ABI-encoded result with metadata. This ABI-encoded response will be
 /// signed by the operator.
-pub fn abi_encode_result_with_metadata(job_id: u32, program_input: Vec<u8>, max_cycles: u64, program_verifying_key: &[u8; 32], raw_output: Vec<u8>) -> Vec<u8> {
+pub fn abi_encode_result_with_metadata(
+    job_id: u32,
+    program_input: Vec<u8>,
+    max_cycles: u64,
+    program_verifying_key: &[u8; 32],
+    raw_output: Vec<u8>,
+) -> Vec<u8> {
     let program_input_hash = keccak256(program_input);
     ResultWithMetadata::abi_encode_params(&(
         job_id,
@@ -123,7 +127,7 @@ async fn sign_message(msg: &[u8], signer: &K256LocalSigner) -> Result<Vec<u8>> {
 
     // Get the R, S, V components
     let r: [u8; 32] = sig.clone().r().to_be_bytes();
-    let s : [u8; 32]= sig.clone().s().to_be_bytes();
+    let s: [u8; 32] = sig.clone().s().to_be_bytes();
     let mut v = sig.recid().to_byte();
     v += 27;
 
