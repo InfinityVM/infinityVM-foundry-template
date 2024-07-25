@@ -5,7 +5,7 @@ import {Consumer} from "./Consumer.sol";
 import {ProgramID} from "./ProgramID.sol"; 
 import {console} from "forge-std/Script.sol";
 
-contract ExampleConsumer is Consumer {
+contract SquareRootConsumer is Consumer {
 
     mapping(uint256 => uint256) public numberToSquareRoot;
     mapping(uint32 => bytes) public jobIDToResult;

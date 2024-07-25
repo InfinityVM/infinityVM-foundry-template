@@ -5,7 +5,7 @@ import {Script, console} from "forge-std/Script.sol";
 import {JobManager} from "../src/JobManager.sol";
 import {IJobManager} from "../src/IJobManager.sol";
 import {Consumer} from "../src/Consumer.sol";
-import {ExampleConsumer} from "../src/ExampleConsumer.sol";
+import {SquareRootConsumer} from "../src/SquareRootConsumer.sol";
 import {Utils} from "./utils/Utils.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -17,7 +17,7 @@ contract Deployer is Script, Utils {
     ProxyAdmin public coprocessorProxyAdmin;
     JobManager public jobManager;
     IJobManager public jobManagerImplementation;
-    ExampleConsumer public consumer;
+    SquareRootConsumer public consumer;
 
     function deployContracts(address relayer, address coprocessorOperator) public {
         vm.startBroadcast();
@@ -37,7 +37,7 @@ contract Deployer is Script, Utils {
             )
         );
 
-        consumer = new ExampleConsumer(address(jobManager));
+        consumer = new SquareRootConsumer(address(jobManager));
 
         // Set ELF paths
         jobManager.setElfPath(
