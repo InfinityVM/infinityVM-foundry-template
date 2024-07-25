@@ -19,6 +19,7 @@ contract ExampleConsumerTest is Test, Deployer {
 
     function test_Consumer_RequestJob() public {
         uint32 jobID = consumer.requestSquareRoot(9);
+        
         assertEq(jobID, 1);
         assertEq(consumer.getProgramInputsForJob(jobID), abi.encode(9));
         JobManager.JobMetadata memory jobMetadata = jobManager.getJobMetadata(jobID);

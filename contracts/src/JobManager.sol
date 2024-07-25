@@ -77,7 +77,7 @@ contract JobManager is
         jobIDCounter++;
 
         // This would normally be a separate call by relayer, but for tests we call it here
-        (bytes memory resultWithMetadata, bytes memory signature) = prove(elfPath, programInput, jobID, maxCycles);
+        (bytes memory resultWithMetadata, bytes memory signature) = execute(elfPath, programInput, jobID, maxCycles);
         submitResult(resultWithMetadata, signature);
 
         return jobID;
@@ -129,7 +129,7 @@ contract JobManager is
         Consumer(job.caller).receiveResult(jobID, result);
     }
 
-    function prove(string memory elf_path, bytes memory input, uint32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
+    function execute(string memory elf_path, bytes memory input, uint32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
         string[] memory imageRunnerInput = new string[](12);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
