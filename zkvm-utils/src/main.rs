@@ -66,10 +66,10 @@ pub async fn main() -> Result<()> {
 /// Prints on stdio the Ethereum ABI and hex encoded result.
 async fn execute_ffi(elf_path: String, input: Vec<u8>, job_id: u32, max_cycles: u64, signer: &K256LocalSigner) -> Result<()> {
     let elf = std::fs::read(elf_path).unwrap();
-    let image_id = compute_image_id(&elf)?;
-    let image_id_bytes = image_id.as_bytes().try_into().expect("image id is 32 bytes");
+    let program_id = compute_image_id(&elf)?;
+    let program_id_bytes = program_id.as_bytes().try_into().expect("program id is 32 bytes");
     let journal = execute(&elf, &input, max_cycles)?;
-    let result_with_metadata = abi_encode_result_with_metadata(job_id, input, max_cycles, image_id_bytes, journal);
+    let result_with_metadata = abi_encode_result_with_metadata(job_id, input, max_cycles, program_id_bytes, journal);
     
     let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
 

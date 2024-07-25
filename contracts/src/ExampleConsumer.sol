@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 import {JobManager} from "./JobManager.sol";
 import {Consumer} from "./Consumer.sol";
-import {ImageID} from "./ImageID.sol"; 
+import {ProgramID} from "./ProgramID.sol"; 
 import {console} from "forge-std/Script.sol";
 
 contract ExampleConsumer is Consumer {
@@ -15,7 +15,7 @@ contract ExampleConsumer is Consumer {
     constructor(address jobManager) Consumer(jobManager) {}
 
     function requestSquareRoot(uint256 number) public returns (uint32) {
-        return requestJob(ImageID.SQUARE_ROOT_ID, abi.encode(number), DEFAULT_MAX_CYCLES);
+        return requestJob(ProgramID.SQUARE_ROOT_ID, abi.encode(number), DEFAULT_MAX_CYCLES);
     }
 
     function getSquareRoot(uint256 number) public view returns (uint256) {

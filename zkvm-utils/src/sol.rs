@@ -9,17 +9,17 @@ use anyhow::{anyhow, bail, Context, Result};
 use risc0_build::GuestListEntry;
 use risc0_zkp::core::digest::Digest;
 
-const IMAGE_ID_LIB_HEADER: &str = r#"pragma solidity ^0.8.13;
+const PROGRAM_ID_LIB_HEADER: &str = r#"pragma solidity ^0.8.13;
 
-library ImageID {
+library ProgramID {
 "#;
 
 /// Options for building and code generation.
 #[derive(Debug, Clone, Default)]
 #[non_exhaustive] // more options may be added in the future.
 pub struct Options {
-    /// Path the generated Solidity file with image ID information.
-    pub image_id_sol_path: Option<PathBuf>,
+    /// Path the generated Solidity file with program ID information.
+    pub program_id_sol_path: Option<PathBuf>,
 
     /// Path the generated Solidity file with deploy script for coprocessor contracts.
     pub deploy_script_path: Option<PathBuf>,
@@ -28,9 +28,9 @@ pub struct Options {
 // Builder interface is provided to make it easy to add more intelligent default and additional
 // options without breaking backwards compatibility in the future.
 impl Options {
-    /// Add a path to generate the Solidity file with image ID information.
-    pub fn with_image_id_sol_path(mut self, path: impl AsRef<Path>) -> Self {
-        self.image_id_sol_path = Some(path.as_ref().to_owned());
+    /// Add a path to generate the Solidity file with program ID information.
+    pub fn with_program_id_sol_path(mut self, path: impl AsRef<Path>) -> Self {
+        self.program_id_sol_path = Some(path.as_ref().to_owned());
         self
     }
 
@@ -48,12 +48,12 @@ pub fn generate_solidity_files(guests: &[GuestListEntry], opts: &Options) -> Res
         return Ok(());
     }
 
-    let image_id_file_path = opts
-        .image_id_sol_path
+    let program_id_file_path = opts
+        .program_id_sol_path
         .as_ref()
-        .ok_or(anyhow!("path for image ID Solidity file must be provided"))?;
-    fs::write(image_id_file_path, generate_image_id_sol(guests)?)
-        .with_context(|| format!("failed to save changes to {}", image_id_file_path.display()))?;
+        .ok_or(anyhow!("path for program ID Solidity file must be provided"))?;
+    fs::write(program_id_file_path, generate_program_id_sol(guests)?)
+        .with_context(|| format!("failed to save changes to {}", program_id_file_path.display()))?;
 
     let deploy_script_path = opts
         .deploy_script_path
@@ -65,23 +65,23 @@ pub fn generate_solidity_files(guests: &[GuestListEntry], opts: &Options) -> Res
     Ok(())
 }
 
-/// Generate source code for a Solidity library containing image IDs for the given guest programs.
-pub fn generate_image_id_sol(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
-    // Assemble a list of image IDs.
-    let image_ids: Vec<_> = guests
+/// Generate source code for a Solidity library containing program IDs for the given guest programs.
+pub fn generate_program_id_sol(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
+    // Assemble a list of program IDs.
+    let program_ids: Vec<_> = guests
         .iter()
         .map(|guest| {
             let name = guest.name.to_uppercase().replace('-', "_");
-            let image_id = hex::encode(Digest::from(guest.image_id));
-            format!("bytes32 public constant {name}_ID = bytes32(0x{image_id});")
+            let program_id = hex::encode(Digest::from(guest.image_id));
+            format!("bytes32 public constant {name}_ID = bytes32(0x{program_id});")
         })
         .collect();
 
-    let image_id_lines = image_ids.join("\n");
+    let program_id_lines = program_ids.join("\n");
 
-    // Building the final image_ID file content.
-    let file_content = format!("{IMAGE_ID_LIB_HEADER}\n{image_id_lines}\n}}");
-    forge_fmt(file_content.as_bytes()).context("failed to format image ID file")
+    // Building the final program_ID file content.
+    let file_content = format!("{PROGRAM_ID_LIB_HEADER}\n{program_id_lines}\n}}");
+    forge_fmt(file_content.as_bytes()).context("failed to format program ID file")
 }
 
 /// Generate source code for Solidity deploy script for coprocessor contracts
@@ -90,9 +90,9 @@ pub fn generate_deploy_script(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
     let elf_entries: Vec<_> = guests
         .iter()
         .map(|guest| {
-            let image_id = hex::encode(Digest::from(guest.image_id));
+            let program_id = hex::encode(Digest::from(guest.image_id));
             let elf_path = guest.path.to_string();
-            format!("jobManager.setElfPath(bytes32(0x{}), \"{}\");", image_id, elf_path)
+            format!("jobManager.setElfPath(bytes32(0x{}), \"{}\");", program_id, elf_path)
         })
         .collect();
 
@@ -179,7 +179,7 @@ fn forge_fmt(src: &[u8]) -> Result<Vec<u8>> {
     let fmt_out = fmt_proc.wait_with_output().context("failed to run forge fmt")?;
 
     if !fmt_out.status.success() {
-        bail!("forge fmt on image ID file content exited with status {}", fmt_out.status,);
+        bail!("forge fmt on program ID file content exited with status {}", fmt_out.status,);
     }
 
     Ok(fmt_out.stdout)

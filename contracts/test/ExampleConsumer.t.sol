@@ -6,7 +6,7 @@ import {JobManager} from "../src/JobManager.sol";
 import {Consumer} from "../src/Consumer.sol";
 import {ExampleConsumer} from "../src/ExampleConsumer.sol";
 import {Deployer} from "../script/Deployer.s.sol";
-import {ImageID} from "../src/ImageID.sol";
+import {ProgramID} from "../src/ProgramID.sol";
 
 contract ExampleConsumerTest is Test, Deployer {
     uint64 DEFAULT_MAX_CYCLES = 1_000_000;
@@ -22,7 +22,7 @@ contract ExampleConsumerTest is Test, Deployer {
         assertEq(jobID, 1);
         assertEq(consumer.getProgramInputsForJob(jobID), abi.encode(9));
         JobManager.JobMetadata memory jobMetadata = jobManager.getJobMetadata(jobID);
-        assertEq(jobMetadata.programID, ImageID.SQUARE_ROOT_ID);
+        assertEq(jobMetadata.programID, ProgramID.SQUARE_ROOT_ID);
         assertEq(jobMetadata.maxCycles, DEFAULT_MAX_CYCLES);
         assertEq(jobMetadata.caller, address(consumer));
 
