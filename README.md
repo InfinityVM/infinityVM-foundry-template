@@ -7,7 +7,7 @@ This repository implements an example application using InfinityVM. InfinityVM e
 This repo contains three folders:
 1. `programs`: Rust programs that contain application logic to be run offchain in the coprocessor.
 2. `contracts`: An `SquareRootConsumer` contract for the application, contracts for the coprocessor, and tests and a deploy script for the contracts.
-    - To build on InfinityVM, you just need the `SquareRootConsumer.sol` and `SquareRootConsumer.t.sol` files. The coprocessor contracts expose an interface you can use but you don't need to read how they're implemented.
+    - To build on InfinityVM, you just need the `SquareRootConsumer.sol` and `SquareRootConsumer.t.sol` files. The coprocessor contracts in `contracts/coprocessor` expose an interface you can use but you don't need to read how they're implemented.
 3. `zkvm-utils`: Utility functions for InfinityVM. *You don't need to read these files to build on InfinityVM.*
 
 The flow of the InfinityVM coprocessor looks like this:
