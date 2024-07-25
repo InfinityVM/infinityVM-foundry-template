@@ -6,9 +6,9 @@ This repository implements an example application using InfinityVM. InfinityVM e
 
 This repo contains three folders:
 1. `programs`: Rust programs that contain application logic to be run offchain in the coprocessor.
-2. `contracts`: An `SquareRootConsumer` contract for the application, shared contracts for the coprocessor, and tests and a deploy script for the contracts.
-    - To make it easier for developing on InfinityVM, you just need to care about the `SquareRootConsumer.sol` and and `SquareRootConsumer.t.sol` files. The shared contracts expose an interface you can use but you don't need to worry about how they are implemented.
-3. `zkvm-utils`: Utility functions for InfinityVM. *You don't need to worry about these files.*
+2. `contracts`: An `SquareRootConsumer` contract for the application, contracts for the coprocessor, and tests and a deploy script for the contracts.
+    - To build on InfinityVM, you just need the `SquareRootConsumer.sol` and `SquareRootConsumer.t.sol` files. The coprocessor contracts expose an interface you can use but you don't need to read how they're implemented.
+3. `zkvm-utils`: Utility functions for InfinityVM. *You don't need to read these files to build on InfinityVM.*
 
 The flow of the InfinityVM coprocessor looks like this:
 1. An app contract requests a compute job from the coprocessor.
@@ -38,9 +38,9 @@ cargo build
 ```
 This will build your program and update the relevant contracts to allow you to use your program from the contracts. Every program has a unique program ID generated for it, which is added to the `ProgramID.sol` contract.
 
-### Use the program from your app contract
+### Use the program in your app contract
 
-We have a contract for the square root app in `SquareRootConsumer.sol`. To use the `square-root.rs` program, we just need to do two things:
+We have a contract for the square root app in `contracts/src/SquareRootConsumer.sol`. To use the `square-root.rs` program, we just need to do two things:
 
 1. Call `requestJob()` with the program ID of `square-root.rs` from `ProgramID.sol` along with ABI-encoded inputs (the number we want to calculate the square root of).
 2. Write a `_receiveResult()` function which accepts the output from the `square-root.rs` program and uses it in some application logic.
@@ -50,7 +50,7 @@ To build the contracts, you can run:
 forge build
 ```
 
-### Write tests for your application
+### Write tests for your app
 
 We have a test for the `SquareRootConsumer` app in `SquareRootConsumer.t.sol`. This test requests the square root of a number and verifies that the contract calls the `square-root.rs` program and stores the correct result from the coprocessor. You can add any tests for your app contracts in this file.
 
