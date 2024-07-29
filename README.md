@@ -32,7 +32,23 @@ All application programs run by the coprocessor live in `programs/app/src`. For 
 
 This is a simple example but you could write a lot more interesting and complex code in your Rust programs.
 
-After you've written your Rust program, run:
+After you've written your Rust program, add it to `programs/app/Cargo.toml`. For example, if we wrote a new program `multiply.rs`, we would add it like this:
+```
+[package]
+name = "guests"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "square-root"
+path = "src/square-root.rs"
+
+[[bin]]
+name = "multiply"
+path = "src/multiply.rs"
+```
+
+Now you can run:
 ```
 cargo build
 ```
