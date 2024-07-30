@@ -3864,7 +3864,6 @@ name = "programs"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.6.4",
- "alloy-rlp",
  "alloy-sol-types",
  "risc0-build",
  "risc0-zkvm",
