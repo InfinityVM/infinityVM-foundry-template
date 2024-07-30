@@ -23,7 +23,7 @@ This section will take us through an example of building an app that computes an
 
 First, clone this repo (including submodules):
 ```
-git clone --recursive https://github.com/risc0/risc0-foundry-template.git
+git clone --recursive https://github.com/Ethos-Works/infinity-foundry-template.git
 ```
 
 ### Write a Rust program to run in the coprocessor
