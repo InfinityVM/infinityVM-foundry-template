@@ -2,14 +2,11 @@
     "rust-analyzer.server.extraEnv": {
       "RISC0_SKIP_BUILD": "1",
       "RISC0_SKIP_BUILD_KERNELS": "1",
-      "CARGO_TARGET_DIR": "target/analyzer"
     },
-    "rust-analyzer.check.extraArgs": [
-      "--target-dir=target/analyzer"
-    ],
-    "rust-analyzer.showUnlinkedFileNotification": true,
     "rust-analyzer.linkedProjects": [
       "Cargo.toml",
       "programs/app/Cargo.toml",
-    ]
-}    
+    ],
+    "rust-analyzer.cargo.targetDir": true,
+    "rust-analyzer.imports.preferNoStd": true,
+}
