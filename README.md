@@ -30,7 +30,7 @@ git clone --recursive https://github.com/Ethos-Works/infinity-foundry-template.g
 
 All application programs run by the coprocessor live in `programs/app/src`. For our square root application, we have a `square-root.rs` program which takes in an integer and returns the square root. This program is also a good example of how to accept inputs and return output.
 
-This is a simple example but you could write a lot more interesting and complex code in your Rust programs.
+This is a simple example but you could write a lot more interesting and complex code in your Rust programs. One thing to note is you can't print anything to `stdout` in your Rust program (if you'd like to print something while debugging your Rust program, we've provided instructions in the `Write tests for your app` section below).
 
 After you've written your Rust program, add it to `programs/app/Cargo.toml`. For example, if we wrote a new program `multiply.rs`, we would add it like this:
 ```
@@ -68,11 +68,17 @@ forge build
 
 ### Write tests for your app
 
-We have a test for the `SquareRootConsumer` app in `SquareRootConsumer.t.sol`. This test requests the square root of a number and verifies that the contract calls the `square-root.rs` program and stores the correct result from the coprocessor. You can add any tests for your app contracts in this file.
+We have an end-to-end test for the `SquareRootConsumer` app in `SquareRootConsumer.t.sol`. This test requests the square root of a number and verifies that the contract calls the `square-root.rs` program and stores the correct result from the coprocessor. You can add any tests for your app contracts in this file.
 
 To run the tests, you can run:
 ```
 forge test -vvv --ffi 
 ```
+
+If you would like to test or debug your Rust program by itself, we have an example test in `programs/src/lib.rs`. You can run this using:
+```
+cargo test
+```
+You can add `println!` statements to your Rust program to help while debugging.
 
 Feel free to reach out to our team if you have any questions, we're happy to help!
