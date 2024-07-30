@@ -98,8 +98,7 @@ pub fn generate_deploy_script(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
             } else {
                 absolute_elf_path.as_str()
             };
-
-            // let elf_path = guest.path.to_string();
+            
             format!("jobManager.setElfPath(bytes32(0x{}), \"{}\");", program_id, relative_elf_path)
         })
         .collect();
