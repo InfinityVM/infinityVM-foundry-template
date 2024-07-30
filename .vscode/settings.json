@@ -1,0 +1,85 @@
+{
+    "[rust]": {
+      "editor.formatOnSave": true
+    },
+    "[starlark]": {
+      "editor.formatOnSave": true
+    },
+    "emmet.includeLanguages": {
+      "rust": "html"
+    },
+    "files.eol": "\n",
+    "git.ignoreLimitWarning": true,
+    "files.associations": {
+      "*.sh": "shellscript",
+      "*.py": "python",
+      "*.cl": "c",
+      "*.rs": "rust",
+      "*.BUILD": "starlark",
+      "meson.build": "meson",
+      "*.mlir": "mlir",
+      "*.pbtxt": "prototxt",
+      "*.cfg": "python",
+      "*.scr": "tcl",
+      "cstddef": "cpp",
+      "*.bazel": "starlark",
+      "fstream": "cpp",
+      "ios": "cpp",
+      "iosfwd": "cpp",
+      "vector": "cpp",
+      "charconv": "cpp",
+      "stdexcept": "cpp",
+      "array": "cpp",
+      "*.css": "tailwindcss",
+      "initializer_list": "cpp"
+    },
+    "tailwindCSS.experimental.classRegex": [
+      [
+        "cva\\(([^)]*)\\)",
+        "[\"'`]([^\"'`]*).*?[\"'`]"
+      ],
+      [
+        "cn\\(([^)]*)\\)",
+        "[\"'`]([^\"'`]*).*?[\"'`]"
+      ],
+      [
+        "cx\\(([^)]*)\\)",
+        "(?:'|\"|`)([^']*)(?:'|\"|`)"
+      ],
+      "twc\\.[^`]+`([^`]*)`",
+      "twc\\(.*?\\).*?`([^`]*)",
+      [
+        "twc\\.[^`]+\\(([^)]*)\\)",
+        "(?:'|\"|`)([^']*)(?:'|\"|`)"
+      ],
+      [
+        "twc\\(.*?\\).*?\\(([^)]*)\\)",
+        "(?:'|\"|`)([^']*)(?:'|\"|`)"
+      ]
+    ],
+    "rust-analyzer.showUnlinkedFileNotification": false,
+    "rust-analyzer.linkedProjects": [
+      "Cargo.toml",
+      "programs/app/Cargo.toml",
+    ],
+    "cSpell.words": [
+      "Groth",
+      "Holesky",
+      "Sepolia",
+      "Zeroable",
+      "bytemuck",
+      "canonicalize",
+      "posix",
+      "repr",
+      "risczero",
+    ],
+    "clangd.checkUpdates": true,
+    "rust-analyzer.server.extraEnv": {
+      "RISC0_SKIP_BUILD": "1",
+      "RISC0_SKIP_BUILD_KERNELS": "1",
+      "CARGO_TARGET_DIR": "target/analyzer"
+    },
+    "rust-analyzer.check.extraArgs": [
+      "--target-dir=target/analyzer"
+    ]
+  }
