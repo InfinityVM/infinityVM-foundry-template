@@ -87,12 +87,21 @@ pub fn generate_program_id_sol(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
 /// Generate source code for Solidity deploy script for coprocessor contracts
 pub fn generate_deploy_script(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
     // Generate the code to set ELF paths
+    let relative_elf_path_prefix = "target/riscv-guest/riscv32im-risc0-zkvm-elf/release/";
+
     let elf_entries: Vec<_> = guests
         .iter()
         .map(|guest| {
             let program_id = hex::encode(Digest::from(guest.image_id));
-            let elf_path = guest.path.to_string();
-            format!("jobManager.setElfPath(bytes32(0x{}), \"{}\");", program_id, elf_path)
+            let absolute_elf_path = guest.path.to_string();
+            let relative_elf_path = if let Some(pos) = absolute_elf_path.find(relative_elf_path_prefix) {
+                &absolute_elf_path[pos..]
+            } else {
+                absolute_elf_path.as_str()
+            };
+
+            // let elf_path = guest.path.to_string();
+            format!("jobManager.setElfPath(bytes32(0x{}), \"{}\");", program_id, relative_elf_path)
         })
         .collect();
 
