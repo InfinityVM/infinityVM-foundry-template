@@ -88,7 +88,6 @@ pub fn generate_program_id_sol(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
 pub fn generate_deploy_script(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
     // Generate the code to set ELF paths
     let relative_elf_path_prefix = "target/riscv-guest/riscv32im-risc0-zkvm-elf/release/";
-
     let elf_entries: Vec<_> = guests
         .iter()
         .map(|guest| {

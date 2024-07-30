@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 risc0-zkvm = { workspace = true, features = ["client"] }
-alloy-primitives = { version = "0.6", default-features = false, features = ["rlp", "serde", "std"] }
-alloy-rlp = { version = "0.3", features = ["derive"], default-features = false }
-alloy-sol-types = { version = "0.7", default-features = false }
+alloy-primitives = { workspace = true }
+alloy-rlp = { workspace = true }
+alloy-sol-types = { workspace = true }
 
 [build-dependencies]
 risc0-build = { workspace = true }

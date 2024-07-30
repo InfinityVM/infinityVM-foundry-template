@@ -58,20 +58,8 @@ version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a43b18702501396fa9bcdeecd533bc85fac75150d308fc0f6800a01e6234a003"
 dependencies = [
- "alloy-rlp-derive",
  "arrayvec",
  "bytes",
-]
-
-[[package]]
-name = "alloy-rlp-derive"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d83524c1f6162fcb5b0decf775498a125066c86dda6066ed609531b0e912f85a"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.71",
 ]
 
 [[package]]
@@ -143,7 +131,6 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.6.4",
- "alloy-rlp",
  "alloy-sol-types",
  "risc0-zkvm",
 ]
