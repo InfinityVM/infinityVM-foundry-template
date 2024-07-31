@@ -124,18 +124,6 @@ pub fn abi_encode_result_with_metadata(
 
 async fn sign_message(msg: &[u8], signer: &K256LocalSigner) -> Result<Vec<u8>> {
     let sig = signer.sign_message(msg).await?;
-
-    // Get the R, S, V components
-    let r: [u8; 32] = sig.clone().r().to_be_bytes();
-    let s: [u8; 32] = sig.clone().s().to_be_bytes();
-    let mut v = sig.recid().to_byte();
-    v += 27;
-
-    // Concatenate R, S, and V to form a 65-byte signature
-    let mut out = Vec::with_capacity(65);
-    out.extend_from_slice(&r);
-    out.extend_from_slice(&s);
-    out.push(v);
-
-    Ok(out)
+    
+    Ok(sig.as_bytes().to_vec())
 }
