@@ -1,9 +1,12 @@
 [package]
-name = "methods"
+name = "programs"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+risc0-zkvm = { workspace = true, features = ["client"] }
+alloy-primitives = { workspace = true }
+alloy-sol-types = { workspace = true }
 
 [build-dependencies]
 risc0-build = { workspace = true }

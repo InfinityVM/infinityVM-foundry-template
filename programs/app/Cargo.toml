@@ -1,5 +1,5 @@
 [package]
-name = "guests"
+name = "app"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,6 +11,5 @@ path = "src/square-root.rs"
 
 [dependencies]
 risc0-zkvm = { version = "1", default-features = false, features = ['std'] }
-alloy-rlp = { version = "0.3", features = ["derive"], default-features = false }
 alloy-sol-types = { version = "0.7", default-features = false }
 alloy-primitives = { version = "0.6", default-features = false, features = ["rlp", "serde", "std"] }
