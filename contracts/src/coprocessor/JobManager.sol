@@ -69,7 +69,7 @@ contract JobManager is
         return programIDToElfPath[programID];
     }
 
-    function createJob(bytes32 programID, bytes memory programInput, uint64 maxCycles) external override returns (uint32 jobID) {
+    function createJob(bytes  programID, bytes memory programInput, uint64 maxCycles) external override returns (uint32 jobID) {
         jobID = jobIDCounter;
         jobIDToMetadata[jobID] = JobMetadata(programID, maxCycles, msg.sender, JOB_STATE_PENDING);
         string memory elfPath = getElfPath(programID);
