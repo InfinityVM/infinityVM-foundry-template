@@ -12,9 +12,10 @@ contract SquareRootConsumerTest is Test, Deployer {
     uint64 DEFAULT_MAX_CYCLES = 1_000_000;
     address RELAYER = address(1);
     address COPROCESSOR_OPERATOR = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    address OFFCHAIN_REQUEST_SIGNER = 0xaF6Bcd673C742723391086C1e91f0B29141D2381;
 
     function setUp() public {
-        deployContracts(RELAYER, COPROCESSOR_OPERATOR);
+        deployContracts(RELAYER, COPROCESSOR_OPERATOR, OFFCHAIN_REQUEST_SIGNER);
     }
 
     function test_Consumer_RequestJob() public {
