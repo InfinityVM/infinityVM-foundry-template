@@ -19,6 +19,14 @@ abstract contract Consumer {
         _;
     }
 
+    function getProgramInputsForJob(uint32 jobID) public view returns (bytes memory) {
+        return jobIDToProgramInput[jobID];
+    }
+
+    function setProgramInputsForJob(uint32 jobID, bytes memory programInput) public onlyJobManager() {
+        jobIDToProgramInput[jobID] = programInput;
+    }
+
     function requestJob(
         bytes32 programID,
         bytes memory programInput,
@@ -33,10 +41,6 @@ abstract contract Consumer {
     // calls submitResult directly, so there's no way to cancel a job before it's completed.
     function cancelJob(uint32 jobID) internal {
         _jobManager.cancelJob(jobID);
-    }
-
-    function getProgramInputsForJob(uint32 jobID) public view returns (bytes memory) {
-        return jobIDToProgramInput[jobID];
     }
 
     function receiveResult(uint32 jobID, bytes calldata result) external onlyJobManager {

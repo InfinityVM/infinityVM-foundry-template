@@ -11,11 +11,11 @@ This repo contains three folders:
 3. `zkvm-utils`: Utility functions for InfinityVM. *You don't need to read these files to build on InfinityVM.*
 
 The flow of the InfinityVM coprocessor looks like this:
-1. An app contract requests a compute job from the coprocessor.
-2. The coprocessor picks up this job and submits the result back to the contract.
+1. An app contract or an offchain user requests a compute job from the coprocessor.
+2. The coprocessor executes this job and submits the result back to the contract.
 3. The app contract can simply use the result from the coprocessor in any of their app logic.
 
-![InfinityVM coprocessor flow](image.png)
+![InfinityVM coprocessor flow](images/overview.png)
 
 ## Quick Start
 
@@ -56,19 +56,40 @@ This will build your program and update the relevant contracts to allow you to u
 
 ### Use the program in your app contract
 
-We have a contract for the square root app in `contracts/src/SquareRootConsumer.sol`. To use the `square-root.rs` program, we just need to do two things:
+We have a contract for the square root app in `contracts/src/SquareRootConsumer.sol`. 
+
+#### Making calls to the coprocessor from a contract
+
+We can call the `square-root.rs` program from our app contract. We just need to do two things:
 
 1. Call `requestJob()` with the program ID of `square-root.rs` from `ProgramID.sol` along with ABI-encoded inputs (the number we want to calculate the square root of).
 2. Write a `_receiveResult()` function which accepts the output from the `square-root.rs` program and uses it in some application logic.
+
+![Onchain request flow](images/onchain-request.png)
 
 To build the contracts, you can run:
 ```
 forge build
 ```
 
+#### Making calls to the coprocessor offchain
+
+We can also call the `square-root.rs` program offchain by sending a request directly to the coprocessor. The coprocessor will execute the job and submit the result to our app contract. The flow looks like this:
+
+![Offchain request flow](images/offchain-request.png)
+
+The offchain request to the coprocessor can be sent by an app, a user, or any authorized third-party. To support offchain requests for your app contract, you need to implement the `isValidSignature()` function in your contract, which is called to verify whether an offchain request is signed by an authorized signer/user. We've provided an example implementation of `isValidSignature()` in the `SquareRootConsumer.sol` contract (which checks that each job request is signed by a signer owned by the app), but you can implement any logic or checks you'd like. Each offchain job request for a given app contract must have a unique `nonce` submitted with it, to prevent replay attacks.
+
+To test this flow, you can call `requestOffchainJob()` in the tests. More instructions on how to write tests are in the `Write tests for your app` section below.
+
 ### Write tests for your app
 
-We have an end-to-end test for the `SquareRootConsumer` app in `SquareRootConsumer.t.sol`. This test requests the square root of a number and verifies that the contract calls the `square-root.rs` program and stores the correct result from the coprocessor. You can add any tests for your app contracts in this file.
+We have two end-to-end tests for the `SquareRootConsumer` app in `SquareRootConsumer.t.sol`:
+
+1. `test_Consumer_RequestJob()`: This test requests the square root of a number from the `SquareRootConsumer.sol` contract. It verifies that the contract calls the `square-root.rs` program and that the coprocessor submits the correct result back to the contract.
+2. `test_Consumer_RequestOffchainJob()`: This test sends an offchain request for the square root of a number directly to the coprocessor, using `requestOffchainJob()`. It verifies that the coprocessor submits the correct result back to the `SquareRootConsumer.sol` contract.
+
+You can add any tests for your app contracts in the `SquareRootConsumer.t.sol` file.
 
 To run the tests, you can run:
 ```

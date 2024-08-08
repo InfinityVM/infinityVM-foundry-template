@@ -1,9 +1,10 @@
 //! Functions to execute a zkVM program on a given input.
 
+use core::str::FromStr;
 use std::io::Write;
 
 use alloy::{
-    primitives::keccak256,
+    primitives::{keccak256, Address},
     signers::{local::LocalSigner, Signer},
 };
 use alloy_sol_types::{sol, SolType};
@@ -19,7 +20,7 @@ type K256LocalSigner = LocalSigner<SigningKey>;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 enum Command {
-    /// Execute the RISC-V ELF binary.
+    /// Execute the RISC-V ELF binary (returns the signed result)
     Execute {
         /// The guest binary path
         guest_binary_path: String,
@@ -33,15 +34,33 @@ enum Command {
         /// The maximum number of cycles to run the program for
         max_cycles: u64,
     },
+    /// Execute an offchain job request (returns the signed job request and result)
+    ExecuteOffchainJob {
+        /// The guest binary path
+        guest_binary_path: String,
+
+        /// The hex encoded input to provide to the guest binary
+        input: String,
+
+        /// The maximum number of cycles to run the program for
+        max_cycles: u64,
+
+        /// The address of the consumer contract
+        consumer: String,
+
+        /// The nonce of the offchain job request
+        nonce: u64,
+
+        /// The secret key to sign the job request
+        secret: String,
+    },
 }
 
 /// Run the CLI.
 #[tokio::main]
 pub async fn main() -> Result<()> {
     let secret = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-    let hex = if secret.starts_with("0x") { &secret[2..] } else { &secret[..] };
-    let decoded = hex::decode(hex)?;
-    let signer = K256LocalSigner::from_slice(&decoded)?;
+    let signer = create_signer(&secret)?;
 
     match Command::parse() {
         Command::Execute { guest_binary_path, input, job_id, max_cycles } => {
@@ -54,12 +73,31 @@ pub async fn main() -> Result<()> {
             )
             .await?
         }
+        Command::ExecuteOffchainJob {
+            guest_binary_path,
+            input,
+            max_cycles,
+            consumer,
+            nonce,
+            secret,
+        } => {
+            execute_offchain_job_ffi(
+                guest_binary_path,
+                hex::decode(input.strip_prefix("0x").unwrap_or(&input))?,
+                max_cycles,
+                consumer,
+                nonce,
+                secret,
+                &signer,
+            )
+            .await?
+        }
     };
 
     Ok(())
 }
 
-/// Prints on stdio the Ethereum ABI and hex encoded result.
+/// Prints on stdio the Ethereum ABI and hex encoded result and signature.
 async fn execute_ffi(
     elf_path: String,
     input: Vec<u8>,
@@ -77,6 +115,54 @@ async fn execute_ffi(
     let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
 
     let calldata = vec![Token::Bytes(result_with_metadata), Token::Bytes(zkvm_operator_signature)];
+    let output = hex::encode(ethers::abi::encode(&calldata));
+
+    // Forge test FFI calls expect hex encoded bytes sent to stdout
+    print!("{output}");
+    std::io::stdout().flush().context("failed to flush stdout buffer")?;
+    Ok(())
+}
+
+/// Prints on stdio the Ethereum ABI and hex encoded request and result
+/// for an offchain job.
+async fn execute_offchain_job_ffi(
+    elf_path: String,
+    input: Vec<u8>,
+    max_cycles: u64,
+    consumer: String,
+    nonce: u64,
+    secret: String,
+    signer: &K256LocalSigner,
+) -> Result<()> {
+    let elf = std::fs::read(elf_path).unwrap();
+    let program_id = compute_image_id(&elf)?;
+    let program_id_bytes = program_id.as_bytes().try_into().expect("program id is 32 bytes");
+
+    // Create a signed job request
+    // This would normally be sent by the user/app signer, but we 
+    // construct it here to work with the foundry tests.
+    let job_request = abi_encode_offchain_job_request(
+        nonce,
+        max_cycles,
+        &consumer,
+        program_id_bytes,
+        input.clone(),
+    );
+
+    let offchain_signer = create_signer(&secret)?;
+    let offchain_signer_signature = sign_message(&job_request, &offchain_signer).await?;
+
+    let journal = execute(&elf, &input, max_cycles)?;
+    let result_with_metadata =
+        abi_encode_offchain_result_with_metadata(input, max_cycles, program_id_bytes, journal);
+    let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
+
+    let calldata = vec![
+        Token::Bytes(result_with_metadata),
+        Token::Bytes(zkvm_operator_signature),
+        Token::Bytes(job_request),
+        Token::Bytes(offchain_signer_signature),
+    ];
     let output = hex::encode(ethers::abi::encode(&calldata));
 
     // Forge test FFI calls expect hex encoded bytes sent to stdout
@@ -103,8 +189,21 @@ pub type ResultWithMetadata = sol! {
     tuple(uint32,bytes32,uint64,bytes32,bytes)
 };
 
+/// The payload that gets signed by the coprocessor node (zkvm executor)
+/// for the result of an offchain job.
+pub type OffChainResultWithMetadata = sol! {
+    tuple(bytes32,uint64,bytes32,bytes)
+};
+
+/// The payload that gets signed by the entity sending an offchain job request.
+/// This can be the user but the Consumer contract can decide who needs to
+/// sign this request.
+pub type OffchainJobRequest = sol! {
+    tuple(uint64,uint64,address,bytes32,bytes)
+};
+
 /// Returns an ABI-encoded result with metadata. This ABI-encoded response will be
-/// signed by the operator.
+/// signed by the coprocessor operator.
 pub fn abi_encode_result_with_metadata(
     job_id: u32,
     program_input: Vec<u8>,
@@ -122,8 +221,52 @@ pub fn abi_encode_result_with_metadata(
     ))
 }
 
+/// Returns an ABI-encoded result with metadata for an offchain job. This
+/// ABI-encoded response will be signed by the coprocessor operator.
+pub fn abi_encode_offchain_result_with_metadata(
+    program_input: Vec<u8>,
+    max_cycles: u64,
+    program_verifying_key: &[u8; 32],
+    raw_output: Vec<u8>,
+) -> Vec<u8> {
+    let program_input_hash = keccak256(program_input);
+    OffChainResultWithMetadata::abi_encode_params(&(
+        program_input_hash,
+        max_cycles,
+        program_verifying_key,
+        raw_output,
+    ))
+}
+
+/// Returns an ABI-encoded offchain job request. This ABI-encoded request can be
+/// signed by the user sending the request, but the Consumer contract can
+/// decide who this request should be signed by.
+pub fn abi_encode_offchain_job_request(
+    nonce: u64,
+    max_cycles: u64,
+    consumer: &str,
+    program_verifying_key: &[u8; 32],
+    program_input: Vec<u8>,
+) -> Vec<u8> {
+    OffchainJobRequest::abi_encode_params(&(
+        nonce,
+        max_cycles,
+        Address::from_str(consumer).unwrap(),
+        program_verifying_key,
+        program_input,
+    ))
+}
+
+fn create_signer(secret: &str) -> Result<LocalSigner<SigningKey>> {
+    let hex = if secret.starts_with("0x") { &secret[2..] } else { &secret[..] };
+    let decoded = hex::decode(hex)?;
+    let signer = K256LocalSigner::from_slice(&decoded)?;
+
+    Ok(signer)
+}
+
 async fn sign_message(msg: &[u8], signer: &K256LocalSigner) -> Result<Vec<u8>> {
     let sig = signer.sign_message(msg).await?;
-    
+
     Ok(sig.as_bytes().to_vec())
 }

@@ -12,14 +12,14 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
 import "./utils/EmptyContract.sol";
 
 // To deploy and verify:
-// forge script Deployer.s.sol:Deployer --sig "deployContracts(address relayer, address coprocessorOperator)" $RELAYER $COPROCESSOR_OPERATOR --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --broadcast -v
+// forge script Deployer.s.sol:Deployer --sig "deployContracts(address relayer, address coprocessorOperator, address offchainRequestSigner)" $RELAYER $COPROCESSOR_OPERATOR $OFFCHAIN_REQUEST_SIGNER --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --broadcast -v
 contract Deployer is Script, Utils {
     ProxyAdmin public coprocessorProxyAdmin;
     JobManager public jobManager;
     IJobManager public jobManagerImplementation;
     SquareRootConsumer public consumer;
 
-    function deployContracts(address relayer, address coprocessorOperator) public {
+    function deployContracts(address relayer, address coprocessorOperator, address offchainRequestSigner) public {
         vm.startBroadcast();
         // deploy proxy admin for ability to upgrade proxy contracts
         coprocessorProxyAdmin = new ProxyAdmin();
@@ -37,7 +37,7 @@ contract Deployer is Script, Utils {
             )
         );
 
-        consumer = new SquareRootConsumer(address(jobManager));
+        consumer = new SquareRootConsumer(address(jobManager), offchainRequestSigner);
 
         // Set ELF paths
         jobManager.setElfPath(
