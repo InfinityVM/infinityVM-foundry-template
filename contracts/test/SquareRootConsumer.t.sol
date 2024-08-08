@@ -35,6 +35,7 @@ contract SquareRootConsumerTest is Test, Deployer {
     }
 
     function test_Consumer_RequestOffchainJob() public {
+        // Request offchain job from default offchain user
         uint32 jobID = jobManager.requestOffchainJob(
             ProgramID.SQUARE_ROOT_ID,
             abi.encode(9),
@@ -55,8 +56,12 @@ contract SquareRootConsumerTest is Test, Deployer {
         assertEq(consumer.getSquareRoot(9), 3);
         assertEq(consumer.getJobResult(1), abi.encode(9, 3));
 
-        // check inputs are set correctly in consumer
+        // Check inputs are set correctly in consumer
+        assertEq(consumer.getProgramInputsForJob(1), abi.encode(9));
+
         // Check that nonce-related data is stored correctly in JobManager contract
+        assertEq(jobManager.getJobIDForNonce(1, address(consumer)), 1);
+        assertEq(jobManager.getMaxNonce(address(consumer)), 1);
     }
 
     function testRevertWhen_Consumer_ReceiveResultUnauthorized() public {
