@@ -105,6 +105,13 @@ contract JobManager is
         return jobID;
     }
 
+    function requestOffchainJob(bytes32 programID, bytes calldata input, uint64 maxCycles, address consumer, uint64 nonce, string calldata privateKey) public returns (uint32) {
+        (bytes memory resultWithMetadata, bytes memory resultSignature, bytes memory jobRequest, bytes memory requestSignature) = executeOffchainJob(programID, input, maxCycles, consumer, nonce, privateKey);
+
+        uint32 jobID = submitResultForOffchainJob(resultWithMetadata, resultSignature, jobRequest, requestSignature);
+        return jobID;
+    }
+
     function _createJob(bytes32 programID, bytes memory programInput, uint64 maxCycles, address consumer) internal returns (uint32) {
         uint32 jobID = jobIDCounter;
         jobIDToMetadata[jobID] = JobMetadata(programID, maxCycles, consumer, JOB_STATE_PENDING);
@@ -228,9 +235,8 @@ contract JobManager is
         return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes));
     }
 
-    function requestOffchainJob(bytes32 programID, bytes calldata input, uint64 maxCycles, address consumer, uint64 nonce, string calldata privateKey) public returns (uint32) {
+    function executeOffchainJob(bytes32 programID, bytes calldata input, uint64 maxCycles, address consumer, uint64 nonce, string calldata privateKey) internal returns (bytes memory, bytes memory, bytes memory, bytes memory) {
         string memory elfPath = getElfPath(programID);
-
         string[] memory imageRunnerInput = new string[](14);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
@@ -247,10 +253,7 @@ contract JobManager is
         imageRunnerInput[i++] = consumer.toHexString();
         imageRunnerInput[i++] = nonce.toString();
         imageRunnerInput[i++] = privateKey;
-        (bytes memory resultWithMetadata, bytes memory resultSignature, bytes memory jobRequest, bytes memory requestSignature) = abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes, bytes, bytes));
-
-        uint32 jobID = submitResultForOffchainJob(resultWithMetadata, resultSignature, jobRequest, requestSignature);
-        return jobID;
+        return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes, bytes, bytes));
     }
 
     function decodeResultWithMetadata(bytes memory resultWithMetadata) public pure returns (ResultWithMetadata memory) {

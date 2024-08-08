@@ -51,7 +51,7 @@ enum Command {
         /// The nonce of the offchain job request
         nonce: u64,
 
-        /// The secret key to sign the result
+        /// The secret key to sign the job request
         secret: String,
     },
 }
