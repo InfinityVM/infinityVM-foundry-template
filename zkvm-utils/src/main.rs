@@ -20,7 +20,7 @@ type K256LocalSigner = LocalSigner<SigningKey>;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 enum Command {
-    /// Execute the RISC-V ELF binary.
+    /// Execute the RISC-V ELF binary (returns the signed result)
     Execute {
         /// The guest binary path
         guest_binary_path: String,
@@ -34,6 +34,7 @@ enum Command {
         /// The maximum number of cycles to run the program for
         max_cycles: u64,
     },
+    /// Execute an offchain job request (returns the signed job request and result)
     ExecuteOffchainJob {
         /// The guest binary path
         guest_binary_path: String,
