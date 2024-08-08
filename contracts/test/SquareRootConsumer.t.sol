@@ -37,12 +37,12 @@ contract SquareRootConsumerTest is Test, Deployer {
     function test_Consumer_RequestOffchainJob() public {
         // Request offchain job from default offchain user
         uint32 jobID = jobManager.requestOffchainJob(
-            ProgramID.SQUARE_ROOT_ID,
-            abi.encode(9),
-            DEFAULT_MAX_CYCLES,
-            address(consumer),
-            1,
-            DEFAULT_OFFCHAIN_SIGNER_PRIVATE_KEY
+            ProgramID.SQUARE_ROOT_ID, // Program ID
+            abi.encode(9), // Program input
+            DEFAULT_MAX_CYCLES, // Max cycles
+            address(consumer), // Consumer address to send result to
+            1, // Nonce (should be unique for each offchain job request)
+            DEFAULT_OFFCHAIN_SIGNER_PRIVATE_KEY // Private key of offchain request signer
         );
 
         JobManager.JobMetadata memory jobMetadata = jobManager.getJobMetadata(jobID);
