@@ -134,11 +134,13 @@ async fn execute_offchain_job_ffi(
     secret: String,
     signer: &K256LocalSigner,
 ) -> Result<()> {
-    // Create a signed job request
     let elf = std::fs::read(elf_path).unwrap();
     let program_id = compute_image_id(&elf)?;
     let program_id_bytes = program_id.as_bytes().try_into().expect("program id is 32 bytes");
 
+    // Create a signed job request
+    // This would normally be sent by the user/app signer, but we 
+    // construct it here to work with the foundry tests.
     let job_request = abi_encode_offchain_job_request(
         nonce,
         max_cycles,
