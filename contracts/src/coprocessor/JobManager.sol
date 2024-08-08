@@ -228,10 +228,10 @@ contract JobManager is
         return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes));
     }
 
-    function requestOffchainJob(bytes32 programID, bytes memory input, uint64 maxCycles, address consumer, uint64 nonce, string memory privateKey) public returns (uint32) {
+    function requestOffchainJob(bytes32 programID, bytes calldata input, uint64 maxCycles, address consumer, uint64 nonce, string calldata privateKey) public returns (uint32) {
         string memory elfPath = getElfPath(programID);
 
-        string[] memory imageRunnerInput = new string[](13);
+        string[] memory imageRunnerInput = new string[](14);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
         imageRunnerInput[i++] = "run";

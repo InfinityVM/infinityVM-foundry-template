@@ -49,6 +49,7 @@ interface IJobManager {
     function cancelJob(uint32 jobID) external;
     function submitResult(bytes calldata resultWithMetadata, bytes calldata signature) external;
     function submitResultForOffchainJob(bytes calldata resultWithoutJobID, bytes calldata signatureOnResult, bytes calldata jobRequest, bytes calldata signatureOnRequest) external returns (uint32);
+    function requestOffchainJob(bytes32 programID, bytes calldata input, uint64 maxCycles, address consumer, uint64 nonce, string calldata privateKey) external returns (uint32);
     function setRelayer(address _relayer) external;
     function getRelayer() external view returns (address);
     function setCoprocessorOperator(address _coprocessorOperator) external;

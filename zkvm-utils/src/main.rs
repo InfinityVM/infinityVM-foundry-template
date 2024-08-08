@@ -1,5 +1,6 @@
 //! Functions to execute a zkVM program on a given input.
 
+use core::str::FromStr;
 use std::{io::Write, ops::Add};
 
 use alloy::{
@@ -239,7 +240,7 @@ pub fn abi_encode_offchain_job_request(
     OffchainJobRequest::abi_encode_params(&(
         nonce,
         max_cycles,
-        Address::parse_checksummed(consumer, None).unwrap(),
+        Address::from_str(consumer).unwrap(),
         program_verifying_key,
         program_input,
     ))
