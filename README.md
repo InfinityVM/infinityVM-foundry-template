@@ -11,7 +11,7 @@ This repo contains three folders:
 3. `zkvm-utils`: Utility functions for InfinityVM. *You don't need to read these files to build on InfinityVM.*
 
 The flow of the InfinityVM coprocessor looks like this:
-1. An app contract or a user offchain requests a compute job from the coprocessor.
+1. An app contract or an offchain user requests a compute job from the coprocessor.
 2. The coprocessor executes this job and submits the result back to the contract.
 3. The app contract can simply use the result from the coprocessor in any of their app logic.
 
