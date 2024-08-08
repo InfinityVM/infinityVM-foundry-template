@@ -86,7 +86,7 @@ To test this flow, you can call `requestOffchainJob()` in the tests. More instru
 
 We have two end-to-end tests for the `SquareRootConsumer` app in `SquareRootConsumer.t.sol`:
 
-1. `test_Consumer_RequestJob()`: This test requests the square root of a number from the `SquareRootConsumer.sol` contract. It verifies that the contract calls the `square.root.rs` program and that the coprocessor submits the correct result back to the contract.
+1. `test_Consumer_RequestJob()`: This test requests the square root of a number from the `SquareRootConsumer.sol` contract. It verifies that the contract calls the `square-root.rs` program and that the coprocessor submits the correct result back to the contract.
 2. `test_Consumer_RequestOffchainJob()`: This test sends an offchain request for the square root of a number directly to the coprocessor, using `requestOffchainJob()`. It verifies that the coprocessor submits the correct result back to the `SquareRootConsumer.sol` contract.
 
 You can add any tests for your app contracts in the `SquareRootConsumer.t.sol` file.
