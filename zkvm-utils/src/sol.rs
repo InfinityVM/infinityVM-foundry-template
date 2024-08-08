@@ -93,12 +93,13 @@ pub fn generate_deploy_script(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
         .map(|guest| {
             let program_id = hex::encode(Digest::from(guest.image_id));
             let absolute_elf_path = guest.path.to_string();
-            let relative_elf_path = if let Some(pos) = absolute_elf_path.find(relative_elf_path_prefix) {
-                &absolute_elf_path[pos..]
-            } else {
-                absolute_elf_path.as_str()
-            };
-            
+            let relative_elf_path =
+                if let Some(pos) = absolute_elf_path.find(relative_elf_path_prefix) {
+                    &absolute_elf_path[pos..]
+                } else {
+                    absolute_elf_path.as_str()
+                };
+
             format!("jobManager.setElfPath(bytes32(0x{}), \"{}\");", program_id, relative_elf_path)
         })
         .collect();

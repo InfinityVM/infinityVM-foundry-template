@@ -1,10 +1,10 @@
 //! Functions to execute a zkVM program on a given input.
 
 use core::str::FromStr;
-use std::{io::Write, ops::Add};
+use std::io::Write;
 
 use alloy::{
-    primitives::{keccak256, Address, address},
+    primitives::{keccak256, Address},
     signers::{local::LocalSigner, Signer},
 };
 use alloy_sol_types::{sol, SolType};
@@ -73,14 +73,14 @@ pub async fn main() -> Result<()> {
                 &signer,
             )
             .await?
-        },
-        Command::ExecuteOffchainJob { 
-            guest_binary_path, 
-            input, 
-            max_cycles, 
-            consumer, 
-            nonce, 
-            secret 
+        }
+        Command::ExecuteOffchainJob {
+            guest_binary_path,
+            input,
+            max_cycles,
+            consumer,
+            nonce,
+            secret,
         } => {
             execute_offchain_job_ffi(
                 guest_binary_path,
@@ -92,7 +92,7 @@ pub async fn main() -> Result<()> {
                 &signer,
             )
             .await?
-        },
+        }
     };
 
     Ok(())
@@ -188,16 +188,21 @@ pub type ResultWithMetadata = sol! {
     tuple(uint32,bytes32,uint64,bytes32,bytes)
 };
 
+/// The payload that gets signed by the coprocessor node (zkvm executor)
+/// for the result of an offchain job.
 pub type OffChainResultWithMetadata = sol! {
     tuple(bytes32,uint64,bytes32,bytes)
 };
 
+/// The payload that gets signed by the entity sending an offchain job request.
+/// This can be the user but the Consumer contract can decide who needs to
+/// sign this request.
 pub type OffchainJobRequest = sol! {
     tuple(uint64,uint64,address,bytes32,bytes)
 };
 
 /// Returns an ABI-encoded result with metadata. This ABI-encoded response will be
-/// signed by the operator.
+/// signed by the coprocessor operator.
 pub fn abi_encode_result_with_metadata(
     job_id: u32,
     program_input: Vec<u8>,
@@ -215,6 +220,8 @@ pub fn abi_encode_result_with_metadata(
     ))
 }
 
+/// Returns an ABI-encoded result with metadata for an offchain job. This
+/// ABI-encoded response will be signed by the coprocessor operator.
 pub fn abi_encode_offchain_result_with_metadata(
     program_input: Vec<u8>,
     max_cycles: u64,
@@ -230,6 +237,9 @@ pub fn abi_encode_offchain_result_with_metadata(
     ))
 }
 
+/// Returns an ABI-encoded offchain job request. This ABI-encoded request can be
+/// signed by the user sending the request, but the Consumer contract can
+/// decide who this request should be signed by.
 pub fn abi_encode_offchain_job_request(
     nonce: u64,
     max_cycles: u64,
@@ -248,6 +258,6 @@ pub fn abi_encode_offchain_job_request(
 
 async fn sign_message(msg: &[u8], signer: &K256LocalSigner) -> Result<Vec<u8>> {
     let sig = signer.sign_message(msg).await?;
-    
+
     Ok(sig.as_bytes().to_vec())
 }
