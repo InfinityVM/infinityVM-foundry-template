@@ -125,6 +125,8 @@ async fn execute_ffi(
     Ok(())
 }
 
+/// Prints on stdio the Ethereum ABI and hex encoded request and result
+/// for an offchain job.
 async fn execute_offchain_job_ffi(
     elf_path: String,
     input: Vec<u8>,
