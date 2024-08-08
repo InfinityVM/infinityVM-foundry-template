@@ -25,6 +25,7 @@ contract JobManager is
     using Strings for uint;
     using Strings for uint32;
     using Strings for uint64;
+    using Strings for address;
     using Utils for bytes;
 
     // bytes4(keccak256("isValidSignature(bytes32,bytes)")
@@ -144,10 +145,10 @@ contract JobManager is
     }
 
     function submitResultForOffchainJob(
-        bytes calldata offchainResultWithMetadata,
-        bytes calldata signatureOnResult,
-        bytes calldata jobRequest,
-        bytes calldata signatureOnRequest
+        bytes memory offchainResultWithMetadata,
+        bytes memory signatureOnResult,
+        bytes memory jobRequest,
+        bytes memory signatureOnRequest
     ) public override returns (uint32) {
         // Decode the job request using abi.decode
         OffchainJobRequest memory request = decodeJobRequest(jobRequest);
@@ -209,7 +210,7 @@ contract JobManager is
         Consumer(job.caller).receiveResult(jobID, result);
     }
 
-    function execute(string memory elf_path, bytes memory input, uint32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
+    function execute(string memory elfPath, bytes memory input, uint32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
         string[] memory imageRunnerInput = new string[](12);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
@@ -220,11 +221,36 @@ contract JobManager is
         imageRunnerInput[i++] = "zkvm-utils";
         imageRunnerInput[i++] = "-q";
         imageRunnerInput[i++] = "execute";
-        imageRunnerInput[i++] = elf_path;
+        imageRunnerInput[i++] = elfPath;
         imageRunnerInput[i++] = input.toHexString();
         imageRunnerInput[i++] = jobID.toString();
         imageRunnerInput[i++] = maxCycles.toString();
         return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes));
+    }
+
+    function requestOffchainJob(bytes32 programID, bytes memory input, uint64 maxCycles, address consumer, uint64 nonce, string memory privateKey) public returns (uint32) {
+        string memory elfPath = getElfPath(programID);
+
+        string[] memory imageRunnerInput = new string[](13);
+        uint256 i = 0;
+        imageRunnerInput[i++] = "cargo";
+        imageRunnerInput[i++] = "run";
+        imageRunnerInput[i++] = "--manifest-path";
+        imageRunnerInput[i++] = "zkvm-utils/Cargo.toml";
+        imageRunnerInput[i++] = "--bin";
+        imageRunnerInput[i++] = "zkvm-utils";
+        imageRunnerInput[i++] = "-q";
+        imageRunnerInput[i++] = "execute-offchain-job";
+        imageRunnerInput[i++] = elfPath;
+        imageRunnerInput[i++] = input.toHexString();
+        imageRunnerInput[i++] = maxCycles.toString();
+        imageRunnerInput[i++] = consumer.toHexString();
+        imageRunnerInput[i++] = nonce.toString();
+        imageRunnerInput[i++] = privateKey;
+        (bytes memory resultWithMetadata, bytes memory resultSignature, bytes memory jobRequest, bytes memory requestSignature) = abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes, bytes, bytes));
+
+        uint32 jobID = submitResultForOffchainJob(resultWithMetadata, resultSignature, jobRequest, requestSignature);
+        return jobID;
     }
 
     function decodeResultWithMetadata(bytes memory resultWithMetadata) public pure returns (ResultWithMetadata memory) {

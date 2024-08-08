@@ -1,9 +1,9 @@
 //! Functions to execute a zkVM program on a given input.
 
-use std::io::Write;
+use std::{io::Write, ops::Add};
 
 use alloy::{
-    primitives::keccak256,
+    primitives::{keccak256, Address, address},
     signers::{local::LocalSigner, Signer},
 };
 use alloy_sol_types::{sol, SolType};
@@ -33,6 +33,25 @@ enum Command {
         /// The maximum number of cycles to run the program for
         max_cycles: u64,
     },
+    ExecuteOffchainJob {
+        /// The guest binary path
+        guest_binary_path: String,
+
+        /// The hex encoded input to provide to the guest binary
+        input: String,
+
+        /// The maximum number of cycles to run the program for
+        max_cycles: u64,
+
+        /// The address of the consumer contract
+        consumer: String,
+
+        /// The nonce of the offchain job request
+        nonce: u64,
+
+        /// The secret key to sign the result
+        secret: String,
+    },
 }
 
 /// Run the CLI.
@@ -53,7 +72,26 @@ pub async fn main() -> Result<()> {
                 &signer,
             )
             .await?
-        }
+        },
+        Command::ExecuteOffchainJob { 
+            guest_binary_path, 
+            input, 
+            max_cycles, 
+            consumer, 
+            nonce, 
+            secret 
+        } => {
+            execute_offchain_job_ffi(
+                guest_binary_path,
+                hex::decode(input.strip_prefix("0x").unwrap_or(&input))?,
+                max_cycles,
+                consumer,
+                nonce,
+                secret,
+                &signer,
+            )
+            .await?
+        },
     };
 
     Ok(())
@@ -85,6 +123,52 @@ async fn execute_ffi(
     Ok(())
 }
 
+async fn execute_offchain_job_ffi(
+    elf_path: String,
+    input: Vec<u8>,
+    max_cycles: u64,
+    consumer: String,
+    nonce: u64,
+    secret: String,
+    signer: &K256LocalSigner,
+) -> Result<()> {
+    // Create a signed job request
+    let elf = std::fs::read(elf_path).unwrap();
+    let program_id = compute_image_id(&elf)?;
+    let program_id_bytes = program_id.as_bytes().try_into().expect("program id is 32 bytes");
+
+    let job_request = abi_encode_offchain_job_request(
+        nonce,
+        max_cycles,
+        &consumer,
+        program_id_bytes,
+        input.clone(),
+    );
+
+    let hex = if secret.starts_with("0x") { &secret[2..] } else { &secret[..] };
+    let decoded = hex::decode(hex)?;
+    let offchain_signer = K256LocalSigner::from_slice(&decoded)?;
+    let offchain_signer_signature = sign_message(&job_request, &offchain_signer).await?;
+
+    let journal = execute(&elf, &input, max_cycles)?;
+    let result_with_metadata =
+        abi_encode_offchain_result_with_metadata(input, max_cycles, program_id_bytes, journal);
+    let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
+
+    let calldata = vec![
+        Token::Bytes(result_with_metadata),
+        Token::Bytes(zkvm_operator_signature),
+        Token::Bytes(job_request),
+        Token::Bytes(offchain_signer_signature),
+    ];
+    let output = hex::encode(ethers::abi::encode(&calldata));
+
+    // Forge test FFI calls expect hex encoded bytes sent to stdout
+    print!("{output}");
+    std::io::stdout().flush().context("failed to flush stdout buffer")?;
+    Ok(())
+}
+
 /// Generates journal for the given elf and input.
 fn execute(elf: &[u8], input: &[u8], max_cycles: u64) -> Result<Vec<u8>> {
     let env = ExecutorEnv::builder().session_limit(Some(max_cycles)).write_slice(input).build()?;
@@ -103,6 +187,14 @@ pub type ResultWithMetadata = sol! {
     tuple(uint32,bytes32,uint64,bytes32,bytes)
 };
 
+pub type OffChainResultWithMetadata = sol! {
+    tuple(bytes32,uint64,bytes32,bytes)
+};
+
+pub type OffchainJobRequest = sol! {
+    tuple(uint64,uint64,address,bytes32,bytes)
+};
+
 /// Returns an ABI-encoded result with metadata. This ABI-encoded response will be
 /// signed by the operator.
 pub fn abi_encode_result_with_metadata(
@@ -119,6 +211,37 @@ pub fn abi_encode_result_with_metadata(
         max_cycles,
         program_verifying_key,
         raw_output,
+    ))
+}
+
+pub fn abi_encode_offchain_result_with_metadata(
+    program_input: Vec<u8>,
+    max_cycles: u64,
+    program_verifying_key: &[u8; 32],
+    raw_output: Vec<u8>,
+) -> Vec<u8> {
+    let program_input_hash = keccak256(program_input);
+    OffChainResultWithMetadata::abi_encode_params(&(
+        program_input_hash,
+        max_cycles,
+        program_verifying_key,
+        raw_output,
+    ))
+}
+
+pub fn abi_encode_offchain_job_request(
+    nonce: u64,
+    max_cycles: u64,
+    consumer: &str,
+    program_verifying_key: &[u8; 32],
+    program_input: Vec<u8>,
+) -> Vec<u8> {
+    OffchainJobRequest::abi_encode_params(&(
+        nonce,
+        max_cycles,
+        Address::parse_checksummed(consumer, None).unwrap(),
+        program_verifying_key,
+        program_input,
     ))
 }
 
