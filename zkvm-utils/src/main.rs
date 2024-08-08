@@ -99,7 +99,7 @@ pub async fn main() -> Result<()> {
     Ok(())
 }
 
-/// Prints on stdio the Ethereum ABI and hex encoded result.
+/// Prints on stdio the Ethereum ABI and hex encoded result and signature.
 async fn execute_ffi(
     elf_path: String,
     input: Vec<u8>,
