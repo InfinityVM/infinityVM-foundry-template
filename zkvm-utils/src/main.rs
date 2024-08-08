@@ -60,9 +60,7 @@ enum Command {
 #[tokio::main]
 pub async fn main() -> Result<()> {
     let secret = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-    let hex = if secret.starts_with("0x") { &secret[2..] } else { &secret[..] };
-    let decoded = hex::decode(hex)?;
-    let signer = K256LocalSigner::from_slice(&decoded)?;
+    let signer = create_signer(&secret)?;
 
     match Command::parse() {
         Command::Execute { guest_binary_path, input, job_id, max_cycles } => {
@@ -149,9 +147,7 @@ async fn execute_offchain_job_ffi(
         input.clone(),
     );
 
-    let hex = if secret.starts_with("0x") { &secret[2..] } else { &secret[..] };
-    let decoded = hex::decode(hex)?;
-    let offchain_signer = K256LocalSigner::from_slice(&decoded)?;
+    let offchain_signer = create_signer(&secret)?;
     let offchain_signer_signature = sign_message(&job_request, &offchain_signer).await?;
 
     let journal = execute(&elf, &input, max_cycles)?;
@@ -257,6 +253,14 @@ pub fn abi_encode_offchain_job_request(
         program_verifying_key,
         program_input,
     ))
+}
+
+fn create_signer(secret: &str) -> Result<LocalSigner<SigningKey>> {
+    let hex = if secret.starts_with("0x") { &secret[2..] } else { &secret[..] };
+    let decoded = hex::decode(hex)?;
+    let signer = K256LocalSigner::from_slice(&decoded)?;
+
+    Ok(signer)
 }
 
 async fn sign_message(msg: &[u8], signer: &K256LocalSigner) -> Result<Vec<u8>> {
