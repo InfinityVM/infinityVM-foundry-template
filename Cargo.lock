@@ -6852,7 +6852,6 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "clap",
- "ethers",
  "eyre",
  "hex",
  "home",

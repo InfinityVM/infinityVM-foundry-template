@@ -10,7 +10,6 @@ use alloy::{
 use alloy_sol_types::{sol, SolType};
 use anyhow::{Context, Result};
 use clap::Parser;
-use ethers::abi::Token;
 use k256::ecdsa::SigningKey;
 use risc0_binfmt::compute_image_id;
 use risc0_zkvm::{Executor, ExecutorEnv, LocalProver};
@@ -114,8 +113,9 @@ async fn execute_ffi(
 
     let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
 
-    let calldata = vec![Token::Bytes(result_with_metadata), Token::Bytes(zkvm_operator_signature)];
-    let output = hex::encode(ethers::abi::encode(&calldata));
+    let calldata =
+        abi_encode_result_with_signature_calldata(result_with_metadata, zkvm_operator_signature);
+    let output = hex::encode(calldata);
 
     // Forge test FFI calls expect hex encoded bytes sent to stdout
     print!("{output}");
@@ -139,7 +139,7 @@ async fn execute_offchain_job_ffi(
     let program_id_bytes = program_id.as_bytes().try_into().expect("program id is 32 bytes");
 
     // Create a signed job request
-    // This would normally be sent by the user/app signer, but we 
+    // This would normally be sent by the user/app signer, but we
     // construct it here to work with the foundry tests.
     let job_request = abi_encode_offchain_job_request(
         nonce,
@@ -157,13 +157,13 @@ async fn execute_offchain_job_ffi(
         abi_encode_offchain_result_with_metadata(input, max_cycles, program_id_bytes, journal);
     let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
 
-    let calldata = vec![
-        Token::Bytes(result_with_metadata),
-        Token::Bytes(zkvm_operator_signature),
-        Token::Bytes(job_request),
-        Token::Bytes(offchain_signer_signature),
-    ];
-    let output = hex::encode(ethers::abi::encode(&calldata));
+    let calldata = abi_encode_offchain_result_with_signature_calldata(
+        result_with_metadata,
+        zkvm_operator_signature,
+        job_request,
+        offchain_signer_signature,
+    );
+    let output = hex::encode(calldata);
 
     // Forge test FFI calls expect hex encoded bytes sent to stdout
     print!("{output}");
@@ -180,6 +180,21 @@ fn execute(elf: &[u8], input: &[u8], max_cycles: u64) -> Result<Vec<u8>> {
 
     Ok(prove_info.journal.bytes)
 }
+
+/// The payload with result + signature that gets sent to the JobManager contract to decode.
+///
+/// tuple(ResultWithMetadata,Signature)
+pub type ResultWithSignatureCalldata = sol! {
+    tuple(bytes,bytes)
+};
+
+/// The payload with result + signature + job request + job request signature that gets sent
+/// to the JobManager contract to decode.
+///
+/// tuple(ResultWithMetadata,Signature,OffchainJobRequest,OffchainJobRequestSignature)
+pub type OffChainResultWithSignatureCalldata = sol! {
+    tuple(bytes,bytes,bytes,bytes)
+};
 
 /// The payload that gets signed to signify that the zkvm executor has faithfully
 /// executed the job. Also the result payload the job manager contract expects.
@@ -201,6 +216,28 @@ pub type OffChainResultWithMetadata = sol! {
 pub type OffchainJobRequest = sol! {
     tuple(uint64,uint64,address,bytes32,bytes)
 };
+
+/// Returns ABI-encoded calldata with result and signature. This ABI-encoded response will be
+/// sent to the JobManager contract.
+pub fn abi_encode_result_with_signature_calldata(result: Vec<u8>, signature: Vec<u8>) -> Vec<u8> {
+    ResultWithSignatureCalldata::abi_encode_params(&(result, signature))
+}
+
+/// Returns ABI-encoded calldata with result, signature, job request, and job request signature.
+/// This ABI-encoded response will be sent to the JobManager contract.
+pub fn abi_encode_offchain_result_with_signature_calldata(
+    result: Vec<u8>,
+    signature: Vec<u8>,
+    job_request: Vec<u8>,
+    job_request_signature: Vec<u8>,
+) -> Vec<u8> {
+    OffChainResultWithSignatureCalldata::abi_encode_params(&(
+        result,
+        signature,
+        job_request,
+        job_request_signature,
+    ))
+}
 
 /// Returns an ABI-encoded result with metadata. This ABI-encoded response will be
 /// signed by the coprocessor operator.
