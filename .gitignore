@@ -15,14 +15,10 @@ contracts/broadcast/**
 # Dotenv file
 contracts/.env
 
-# Rust Build Artifacts
-rust/target
-
 # ide
 .idea
 
-programs/**/methods/Cargo.lock
-programs/**/program/target
-programs/**/program/elf
+programs/**/target
+programs/**/elf
 /target/
 /debug/
