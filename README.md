@@ -26,6 +26,14 @@ First, clone this repo (including submodules):
 git clone --recursive https://github.com/Ethos-Works/infinity-foundry-template.git
 ```
 
+Next, install the risc0 toolchain for zkVM functionality:
+```sh
+cargo install cargo-binstall
+cargo binstall cargo-risczero
+cargo risczero install
+cargo risczero --version
+```
+
 ### Write a Rust program to run in the coprocessor
 
 All application programs run by the coprocessor live in `programs/app/src`. For our square root application, we have a `square-root.rs` program which takes in an integer and returns the square root. This program is also a good example of how to accept inputs and return output.
