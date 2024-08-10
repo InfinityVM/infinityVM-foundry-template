@@ -7,22 +7,16 @@ contracts/cache/
 contracts/out/
 contracts/data/
 
-server/build
-
 # Ignores development broadcast logs
 contracts/broadcast/**
 
 # Dotenv file
 contracts/.env
 
-# Rust Build Artifacts
-rust/target
-
 # ide
 .idea
 
 programs/**/methods/Cargo.lock
-programs/**/program/target
-programs/**/program/elf
+programs/**/target/
 /target/
 /debug/
