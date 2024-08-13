@@ -31,6 +31,12 @@ jobs:
         with:
           submodules: recursive
 
+      - uses: dtolnay/rust-toolchain@1.80
+
+
+      - run: cargo build -p zkvm-utils
+        working-directory: .
+
       - name: install foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
