@@ -1,0 +1,61 @@
+name: contracts
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "contracts/**"
+      - ".github/**"
+  pull_request:
+    paths:
+      - "contracts/**"
+      - ".github/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  test:
+    strategy:
+      fail-fast: true
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@1.80
+
+      - uses: taiki-e/install-action@cargo-binstall
+
+      - name: install risc0 tooling
+        shell: bash
+        run: |
+          cargo binstall cargo-risczero -y
+          cargo risczero install
+          cargo risczero --version
+
+      - name: install foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: build rust workspace
+        run: cargo build
+        working-directory: .
+
+      - name: build
+        run: |
+          forge --version
+          forge build --sizes
+
+      - name: test
+        run: |
+          forge test -vvv --ffi

@@ -5,6 +5,7 @@ use std::{
     process::{Command, Stdio},
 };
 
+use alloy::primitives::hex;
 use anyhow::{anyhow, bail, Context, Result};
 use risc0_build::GuestListEntry;
 use risc0_zkp::core::digest::Digest;
@@ -41,7 +42,7 @@ impl Options {
     }
 }
 
-/// Generate Solidity files for testing a consumer app with InfinityVM.
+/// Generate Solidity files for testing a consumer app with `InfinityVM`.
 pub fn generate_solidity_files(guests: &[GuestListEntry], opts: &Options) -> Result<()> {
     // Skip Solidity source files generation if INFINITY_SKIP_BUILD is enabled.
     if env::var("INFINITY_SKIP_BUILD").is_ok() {
@@ -51,14 +52,14 @@ pub fn generate_solidity_files(guests: &[GuestListEntry], opts: &Options) -> Res
     let program_id_file_path = opts
         .program_id_sol_path
         .as_ref()
-        .ok_or(anyhow!("path for program ID Solidity file must be provided"))?;
+        .ok_or_else(|| anyhow!("path for program ID Solidity file must be provided"))?;
     fs::write(program_id_file_path, generate_program_id_sol(guests)?)
         .with_context(|| format!("failed to save changes to {}", program_id_file_path.display()))?;
 
     let deploy_script_path = opts
         .deploy_script_path
         .as_ref()
-        .ok_or(anyhow!("path for deploy script Solidity file must be provided"))?;
+        .ok_or_else(|| anyhow!("path for deploy script Solidity file must be provided"))?;
     fs::write(deploy_script_path, generate_deploy_script(guests)?)
         .with_context(|| format!("failed to save changes to {}", deploy_script_path.display()))?;
 

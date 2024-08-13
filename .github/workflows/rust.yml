@@ -1,0 +1,100 @@
+name: rust
+
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#patterns-to-match-file-paths
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**.rs"
+      - "**.lock"
+      - "**.toml"
+      - ".github/**"
+  pull_request:
+    paths:
+      - "**.rs"
+      - "**.lock"
+      - "**.toml"
+      - ".github/**"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  build_clippy:
+    name: build+clippy
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@1.80
+        with:
+          components: clippy
+
+      - uses: taiki-e/install-action@cargo-binstall
+
+      - name: Install risc0 tooling
+        shell: bash
+        run: |
+          cargo binstall cargo-risczero -y
+          cargo risczero install
+          cargo risczero --version
+
+      - name: install foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - run: cargo build
+
+      - run:  cargo clippy
+        env:
+          RISC0_SKIP_BUILD: true
+          RUSTFLAGS: "-D warnings"
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@1.80
+
+      - uses: taiki-e/install-action@cargo-binstall
+
+      - name: Install risc0 tooling
+        shell: bash
+        run: |
+          cargo binstall cargo-risczero -y
+          cargo risczero install
+          cargo risczero --version
+
+      - name: install foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - run: cargo test
+
+  fmt:
+    name: fmt
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+
+      - run: cargo +nightly fmt --all --check
