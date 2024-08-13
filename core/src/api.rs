@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Request {
-    PlaceOrder(PlaceOrderRequest),
+    AddOrder(AddOrderRequest),
+    CancelOrder(CancelOrderRequest),
     Deposit(DepositRequest),
     Withdraw(WithdrawRequest),
 }
@@ -14,21 +15,22 @@ pub enum Request {
 #[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Response {
-    PlaceOrder(PlaceOrderResponse),
+    AddOrder(AddOrderResponse),
+    CancelOrder(CancelOrderResponse),
     Deposit(DepositResponse),
-    Withdraw(WithdrawRequest),
+    Withdraw(WithdrawResponse),
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PlaceOrderRequest {
+pub struct AddOrderRequest {
     pub address: [u8; 20],
     pub is_buy: bool,
     pub limit_price: u64,
     pub size: u64,
 }
 
-impl PlaceOrderRequest {
+impl AddOrderRequest {
     // TODO: add signing
     pub fn to_order(&self, oid: u64) -> Order {
         Order { is_buy: self.is_buy, limit_price: self.limit_price, size: self.size, oid }
@@ -37,9 +39,22 @@ impl PlaceOrderRequest {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PlaceOrderResponse {
+pub struct AddOrderResponse {
     pub success: bool,
     pub status: Option<FillStatus>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CancelOrderRequest {
+    pub oid: u64,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CancelOrderResponse {
+    pub success: bool,
+    pub fill_status: Option<FillStatus>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
@@ -90,12 +105,6 @@ impl Order {
     pub fn new(is_buy: bool, limit_price: u64, size: u64, oid: u64) -> Self {
         Self { is_buy, limit_price, size, oid }
     }
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone, BorshDeserialize, BorshSerialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Cancel {
-    pub oid: u64,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, BorshDeserialize, BorshSerialize)]

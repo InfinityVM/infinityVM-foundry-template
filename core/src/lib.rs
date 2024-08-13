@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use api::{
-    DepositRequest, DepositResponse, PlaceOrderRequest, PlaceOrderResponse, UserBalance,
-    WithdrawRequest, WithdrawResponse,
+    AddOrderRequest, AddOrderResponse, CancelOrderRequest, CancelOrderResponse, DepositRequest,
+    DepositResponse, Request, Response, UserBalance, WithdrawRequest, WithdrawResponse,
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
@@ -12,6 +12,11 @@ pub mod orderbook;
 
 use crate::api::FillStatus;
 use orderbook::OrderBook;
+
+#[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+pub enum Error {
+    OrderDoesNotExist,
+}
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 pub struct State {
@@ -23,6 +28,7 @@ pub struct State {
 }
 
 pub fn deposit(req: DepositRequest, mut state: State) -> (DepositResponse, State) {
+    // TODO, handle case of address already existing
     state.balances.insert(req.address, req.amounts);
 
     (DepositResponse { success: true }, state)
@@ -40,13 +46,22 @@ pub fn withdraw(req: WithdrawRequest, mut state: State) -> (WithdrawResponse, St
     }
 }
 
-pub fn add_order(req: PlaceOrderRequest, mut state: State) -> (PlaceOrderResponse, State) {
+pub fn cancel_order(req: CancelOrderRequest, mut state: State) -> (CancelOrderResponse, State) {
+    if let Ok(()) = state.book.cancel(req.oid) {
+        let fill_status = state.order_status.remove(&req.oid);
+        (CancelOrderResponse { success: true, fill_status }, state)
+    } else {
+        (CancelOrderResponse { success: false, fill_status: None }, state)
+    }
+}
+
+pub fn add_order(req: AddOrderRequest, mut state: State) -> (AddOrderResponse, State) {
     let addr = req.address;
     let balance = state.balances.get_mut(&addr).unwrap();
 
     // -- External
     if (req.is_buy && balance.b < req.size) || (!req.is_buy && balance.a < req.size) {
-        return (PlaceOrderResponse { success: false, status: None }, state);
+        return (AddOrderResponse { success: false, status: None }, state);
     };
 
     let order = req.to_order(state.oid);
@@ -89,7 +104,28 @@ pub fn add_order(req: PlaceOrderRequest, mut state: State) -> (PlaceOrderRespons
     state.order_status.insert(order_id, fill_status.clone());
     // --
 
-    let resp = PlaceOrderResponse { success: true, status: Some(fill_status) };
+    let resp = AddOrderResponse { success: true, status: Some(fill_status) };
 
     (resp, state)
+}
+
+pub fn tick(request: Request, state: State) -> Result<(Response, State), Error> {
+    match request {
+        Request::AddOrder(req) => {
+            let (resp, state) = add_order(req, state);
+            Ok((Response::AddOrder(resp), state))
+        }
+        Request::CancelOrder(req) => {
+            let (resp, state) = cancel_order(req, state);
+            Ok((Response::CancelOrder(resp), state))
+        }
+        Request::Deposit(req) => {
+            let (resp, state) = deposit(req, state);
+            Ok((Response::Deposit(resp), state))
+        }
+        Request::Withdraw(req) => {
+            let (resp, state) = withdraw(req, state);
+            Ok((Response::Withdraw(resp), state))
+        }
+    }
 }

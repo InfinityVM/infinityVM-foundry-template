@@ -3,12 +3,10 @@ use std::collections::{BTreeMap, HashMap};
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
-use crate::api::{Order, OrderFill};
-
-#[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
-pub enum Error {
-    OrderDoesNotExist,
-}
+use crate::{
+    api::{Order, OrderFill},
+    Error,
+};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 pub struct OrderBook {

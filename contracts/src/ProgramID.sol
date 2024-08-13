@@ -1,5 +1,5 @@
 pragma solidity ^0.8.13;
 
 library ProgramID {
-    bytes32 public constant SQUARE_ROOT_ID = bytes32(0x16c37db8a5f46f457052d122fe9ef22bc8132815192368dbb384d7d103a6efbb);
+    bytes32 public constant CLOB_ID = bytes32(0x2d2347969700d9cbb46e8aea65af2a814634f1cfe355587a2eabc4cb3db7cede);
 }

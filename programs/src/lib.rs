@@ -12,6 +12,7 @@ mod tests {
 
     const MAX_CYCLES: u64 = 1_000_000;
 
+    // TODO: fix this
     #[test]
     fn executes_square_root() {
         // Input for program
@@ -24,7 +25,7 @@ mod tests {
             .build()
             .unwrap();
         let executor = LocalProver::new("locals only");
-        let execute_info = executor.execute(env, super::SQUARE_ROOT_ELF).unwrap();
+        let execute_info = executor.execute(env, super::CLOB_ELF).unwrap();
 
         // Decode output and check result
         let number_with_square_root =
