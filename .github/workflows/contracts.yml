@@ -33,7 +33,6 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@1.80
 
-
       - run: cargo build -p zkvm-utils
         working-directory: .
 
