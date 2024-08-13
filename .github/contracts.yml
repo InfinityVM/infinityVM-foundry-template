@@ -10,7 +10,7 @@ on:
     paths:
       - "contracts/**"
       - ".github/**"
-  workflow_dispatch: #
+  workflow_dispatch:
 
 permissions:
   contents: read
