@@ -111,3 +111,17 @@ cargo test
 You can add `println!` statements to your Rust program to help while debugging.
 
 Feel free to reach out to our team if you have any questions, we're happy to help!
+
+### Development
+
+Lint:
+
+```sh
+RISC0_SKIP_BUILD=true cargo clippy
+```
+
+Format:
+
+```sh
+cargo +nightly fmt
+```
