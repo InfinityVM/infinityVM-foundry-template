@@ -1,10 +1,16 @@
 name: contracts
 on:
-  pull_request:
-  merge_group:
   push:
     branches:
       - main
+    paths:
+      - "contracts/**"
+      - ".github/**"
+  pull_request:
+    paths:
+      - "contracts/**"
+      - ".github/**"
+  workflow_dispatch: #
 
 permissions:
   contents: read
@@ -24,25 +30,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            ../.github/workflows/test-contracts.yml
-            **/*.sol
-      - name: Install Foundry
-        if: env.GIT_DIFF
+
+      - name: install foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
-      - name: Run Forge build
-        if: env.GIT_DIFF
+
+      - name: build
         run: |
           forge --version
           forge build --sizes
-        id: build
-      - name: Run Forge tests
-        if: env.GIT_DIFF
+
+      - name: test
         run: |
           forge test -vvv
-        id: test

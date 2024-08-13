@@ -1,10 +1,22 @@
 name: rust
 
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#patterns-to-match-file-paths
 on:
-  pull_request:
-  merge_group:
   push:
-    branches: [main]
+    branches:
+      - main
+    paths:
+      - "**.rs"
+      - "**.lock"
+      - "**.toml"
+      - ".github/**"
+  pull_request:
+    paths:
+      - "**.rs"
+      - "**.lock"
+      - "**.toml"
+      - ".github/**"
+  workflow_dispatch: #
 
 env:
   CARGO_TERM_COLOR: always
@@ -20,15 +32,7 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            *.rs
-            *.toml
-            *.lock
-
-      - uses: dtolnay/rust-toolchain@1.79.0
+      - uses: dtolnay/rust-toolchain@1.80
         with:
           components: clippy
 
@@ -42,10 +46,8 @@ jobs:
           cargo risczero --version
 
       - run: cargo build
-        if: env.GIT_DIFF
 
       - run:  cargo clippy
-        if: env.GIT_DIFF
         env:
           RISC0_SKIP_BUILD: true
           RUSTFLAGS: "-D warnings"
@@ -58,15 +60,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            *.rs
-            *.toml
-            *.lock
 
-      - uses: dtolnay/rust-toolchain@1.79.0
+      - uses: dtolnay/rust-toolchain@1.80
 
       - uses: taiki-e/install-action@cargo-binstall
 
@@ -78,7 +73,6 @@ jobs:
           cargo risczero --version
 
       - run: cargo test
-        if: env.GIT_DIFF
 
   fmt:
     name: fmt
@@ -88,21 +82,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            *.rs
-            *.toml
-            *.lock
 
       - uses: dtolnay/rust-toolchain@nightly
-        if: env.GIT_DIFF
         with:
           components: rustfmt
 
       - run: cargo +nightly fmt --all --check
-        if: env.GIT_DIFF
 
   docs:
     name: docs
@@ -113,19 +98,8 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            *.rs
-            *.toml
-            *.lock
-
-      - name: common setup
-        if: env.GIT_DIFF
-        uses: ./.github/actions/setup
+      - uses: dtolnay/rust-toolchain@1.80
 
       - run: cargo doc --document-private-items --no-deps
-        if: env.GIT_DIFF
         env: 
           RUSTDOCFLAGS: "--cfg docsrs -D warnings"
