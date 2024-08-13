@@ -42,14 +42,13 @@ jobs:
           cargo risczero install
           cargo risczero --version
 
-      - name: build rust workspace
-        run: cargo build
-        working-directory: .
-
       - name: install foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+
+      - name: build rust workspace
+        run: cd .. && cargo build
 
       - name: build
         run: |
