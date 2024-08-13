@@ -5,6 +5,7 @@ rust-version = "1.79"
 
 [workspace]
 members = [
+	"core",
 	"programs",
     "zkvm-utils",
 ]
@@ -98,6 +99,8 @@ alloy = { version = "0.2", features = ["signer-local"], default-features = false
 alloy-primitives = { version = "0.7", default-features = false }
 alloy-sol-types = { version = "0.7", default-features = false }
 
+borsh = { version = "1", features = ["derive", "std"], default-features = false }
+
 clap = { version = "4", features = ["derive"] }
 
 k256 = { version = "0.13", default-features = false }
@@ -107,8 +110,6 @@ risc0-build = { version = "1", default-features = false }
 risc0-zkp = { version = "1.0", default-features = false }
 risc0-binfmt = { version = "1", default-features = false }
 
-sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", features = ["libm"], rev = "9a19e0becfe2bd133d3b1bf7070edf90892f7171", default-features = false }
-sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "9a19e0becfe2bd133d3b1bf7070edf90892f7171", default-features = false }
-sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", rev = "9a19e0becfe2bd133d3b1bf7070edf90892f7171", default-features = false }
+serde = { version = "1.0", default-features = false, features = ["derive"] }
 
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"], default-features = false }
