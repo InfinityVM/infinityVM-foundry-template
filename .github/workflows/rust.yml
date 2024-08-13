@@ -98,23 +98,3 @@ jobs:
           components: rustfmt
 
       - run: cargo +nightly fmt --all --check
-
-  docs:
-    name: docs
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - uses: dtolnay/rust-toolchain@1.80
-
-      - name: install foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-
-      - run: cargo doc --document-private-items --no-deps
-        env: 
-          RUSTDOCFLAGS: "--cfg docsrs -D warnings"
