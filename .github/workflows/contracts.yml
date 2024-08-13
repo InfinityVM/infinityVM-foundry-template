@@ -42,8 +42,8 @@ jobs:
           cargo risczero install
           cargo risczero --version
 
-      - name: build zkvm-utils
-        run: cargo build -p zkvm-utils
+      - name: build rust workspace
+        run: cargo build
         working-directory: .
 
       - name: install foundry
