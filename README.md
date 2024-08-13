@@ -21,12 +21,21 @@ The flow of the InfinityVM coprocessor looks like this:
 
 This section will take us through an example of building an app that computes and stores the square root of numbers.
 
-First, clone this repo (including submodules):
+Clone this repo (including submodules):
+
 ```
 git clone --recursive https://github.com/Ethos-Works/infinity-foundry-template.git
 ```
 
+Setup rust
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup use 1.80
+```
+
 Next, install the risc0 toolchain for zkVM functionality:
+
 ```sh
 cargo install cargo-binstall
 cargo binstall cargo-risczero
