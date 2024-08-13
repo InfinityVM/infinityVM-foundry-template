@@ -13,7 +13,6 @@ alloy = { workspace = true }
 alloy-sol-types = { workspace = true }
 clap = { workspace = true, features = ["derive", "env"] }
 k256 = { workspace = true }
-# hex = { version = "0.4" }
 risc0-build = { workspace = true }
 risc0-binfmt = { workspace = true }
 risc0-zkp = { workspace = true }
