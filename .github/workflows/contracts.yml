@@ -48,8 +48,7 @@ jobs:
           version: nightly
 
       - name: build rust workspace
-        run: 
-        cargo build
+        run: cargo build
         working-directory: .
 
       - name: build
