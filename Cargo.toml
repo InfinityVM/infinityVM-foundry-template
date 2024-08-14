@@ -6,6 +6,7 @@ rust-version = "1.79"
 [workspace]
 members = [
 	"core",
+	"node",
 	"programs",
     "zkvm-utils",
 ]
@@ -95,6 +96,7 @@ significant_drop_tightening = "allow"
 
 [workspace.dependencies]
 anyhow = { version = "1", default-features = false }
+axum = "0.7.5"
 alloy = { version = "0.2", features = ["signer-local"], default-features = false }
 alloy-primitives = { version = "0.7", default-features = false }
 alloy-sol-types = { version = "0.7", default-features = false }

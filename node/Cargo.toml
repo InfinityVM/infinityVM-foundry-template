@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+axum = { workspace = true }
 tokio = { workspace = true }
 
 
 clob-core = { path = "../core" }
-programs = { path = "../"}
+programs = { path = "../programs"}

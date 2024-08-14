@@ -1,19 +1,42 @@
-use clob_core::{State, api::Request, tick};
-use tokio::sync::mpsc::channel;
-use tokio::sync::mpsc::Receiver
+use axum::{extract::State as ExtractState, Json};
+use clob_core::api::{DepositRequest, DepositResponse, Request};
+use tokio::sync::{
+    mpsc::Sender,
+    oneshot,
+};
 
-async fn run_engine(mut state: State, receiver: Receiver<Request>, mut global_idx: u64) {
-  loop {
-    let request = self.receiver.recv().await.expect("todo");
-    let cur_idx = global_idx;
-    global_idx += 1;
-    (result, post_state) = tick(request, state);
+pub mod engine;
 
-    println!("cur_idx={}, result={:?}", cur_idx, result);
-    // Record stuff in DB
-    // - the request, result and global nonce
-    // - the hash of the state after the transition
+#[derive(Clone)]
+pub struct ServerState {
+    pub engine_sender: Sender<(Request, oneshot::Sender<u64>)>,
+}
 
-    state = post_state
-  }
+pub async fn http_listen(state: ServerState, listen_address: &str) {
+    let app = axum::Router::new()
+        .route("/deposit", axum::routing::post(deposit))
+        // .route("/withdraw", axum::routing::post(withdraw))
+        // .route("/orders", axum::routing::post(place_order))
+        // .route("/cancel", axum::routing::post(cancel))
+        // .route("/status", axum::routing::post(order_status))
+        .with_state(state);
+
+    let listener = tokio::net::TcpListener::bind(listen_address).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+
+async fn deposit(
+    ExtractState(state): ExtractState<ServerState>,
+    Json(req): Json<DepositRequest>,
+) -> Json<DepositResponse> {
+    let sender = state.engine_sender;
+    let (tx, rx) = oneshot::channel::<u64>();
+
+    sender.send((Request::Deposit(req), tx)).await.expect("todo");
+    let global_index = rx.await.expect("todo");
+    println!("deposit: global_index: {:?}", global_index);
+
+    // TODO if we want preconfs sign global index and put in response
+
+    Json(DepositResponse { success: true })
 }

@@ -68,6 +68,11 @@ pub struct DepositRequest {
 pub struct DepositResponse {
     pub success: bool,
 }
+#[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DepositResponseExternal {
+    pub success: bool,
+}
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
