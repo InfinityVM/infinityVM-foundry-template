@@ -111,5 +111,6 @@ risc0-zkp = { version = "1.0", default-features = false }
 risc0-binfmt = { version = "1", default-features = false }
 
 serde = { version = "1.0", default-features = false, features = ["derive"] }
+sha2 = { version = "0.10", features = ["std"], default-features = false }
 
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"], default-features = false }

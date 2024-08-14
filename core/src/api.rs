@@ -31,7 +31,6 @@ pub struct AddOrderRequest {
 }
 
 impl AddOrderRequest {
-    // TODO: add signing
     pub fn to_order(&self, oid: u64) -> Order {
         Order { is_buy: self.is_buy, limit_price: self.limit_price, size: self.size, oid }
     }

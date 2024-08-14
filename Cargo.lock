@@ -961,6 +961,7 @@ dependencies = [
  "alloy-primitives",
  "borsh",
  "serde",
+ "sha2",
 ]
 
 [[package]]

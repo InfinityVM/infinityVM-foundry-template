@@ -6,4 +6,5 @@ edition = "2021"
 [dependencies]
 serde = { workspace = true }
 borsh = { workspace = true }
+sha2 = { workspace = true }
 alloy-primitives = { workspace = true }

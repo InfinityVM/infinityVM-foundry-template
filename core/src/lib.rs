@@ -129,3 +129,18 @@ pub fn tick(request: Request, state: State) -> Result<(Response, State), Error> 
         }
     }
 }
+
+pub trait BorshSha256 {
+    fn borsh_sha256(&self) -> [u8; 32];
+}
+
+impl<T: BorshSerialize> BorshSha256 for T {
+    fn borsh_sha256(&self) -> [u8; 32] {
+        use sha2::{Digest, Sha256};
+
+        let mut hasher = Sha256::new();
+        borsh::to_writer(&mut hasher, &self).expect("orderbook is serializable");
+        let hash = hasher.finalize();
+        hash.into()
+    }
+}
