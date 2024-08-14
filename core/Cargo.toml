@@ -8,3 +8,7 @@ serde = { workspace = true }
 borsh = { workspace = true }
 sha2 = { workspace = true }
 alloy-primitives = { workspace = true }
+bytes = { workspace = true }
+
+# not ideal to have this here
+reth-db = { workspace = true }

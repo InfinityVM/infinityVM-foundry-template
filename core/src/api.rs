@@ -1,7 +1,31 @@
 //! Types in the public API
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use bytes::buf::BufMut;
+use reth_db::table::{Compress, Decompress};
 use serde::{Deserialize, Serialize};
+
+macro_rules! impl_compress_decompress {
+    ($name:ident) => {
+        impl Compress for $name {
+            type Compressed = Vec<u8>;
+
+            fn compress_to_buf<B: BufMut + AsMut<[u8]>>(self, dest: &mut B) {
+                let src = borsh::to_vec(&self).expect("borsh serialize works. qed.");
+                dest.put(&src[..])
+            }
+        }
+
+        impl Decompress for $name {
+            fn decompress<B: AsRef<[u8]>>(value: B) -> Result<Self, reth_db::DatabaseError> {
+                borsh::from_slice(value.as_ref()).map_err(|_| reth_db::DatabaseError::Decode)
+            }
+        }
+    };
+}
+
+impl_compress_decompress! { Request }
+impl_compress_decompress! { Response }
 
 #[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]

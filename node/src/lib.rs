@@ -4,6 +4,7 @@ use clob_core::api::{
 };
 use tokio::sync::{mpsc::Sender, oneshot};
 
+pub mod db;
 pub mod engine;
 
 #[derive(Clone)]
