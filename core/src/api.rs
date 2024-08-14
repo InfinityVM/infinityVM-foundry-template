@@ -21,6 +21,13 @@ pub enum Response {
     Withdraw(WithdrawResponse),
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApiResponse {
+    pub response: Response,
+    pub global_index: u64,
+}
+
 #[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AddOrderRequest {

@@ -1,34 +1,40 @@
-use clob_core::{api::Request, tick, State as ClobState};
+use clob_core::{
+    api::{ApiResponse, Request},
+    tick, State as ClobState,
+};
 use tokio::sync::{mpsc::Receiver, oneshot};
 
 pub async fn run_engine(
     mut state: ClobState,
-    mut receiver: Receiver<(Request, oneshot::Sender<u64>)>,
-    mut global_idx: u64,
+    mut receiver: Receiver<(Request, oneshot::Sender<ApiResponse>)>,
+    mut global_index: u64,
 ) {
     loop {
         // TODO: refactor so this recieves a nonce and then uses that nonce to read from DB
         // This should help ensure ordering
-        let (request, sender) = receiver.recv().await.expect("todo");
-        let cur_idx = global_idx;
-        global_idx += 1;
+        let (request, response_sender) = receiver.recv().await.expect("todo");
+        println!("engine: {:?}, response_sender: {:?}", request, response_sender);
 
         // In new background thread:
         // - relay back the index of the transaction so we can return it as a preconf
         // - write highest seen gidx to db
         // - write request to db, keyed by gidx
-        sender.send(global_idx).expect("todo");
 
         // TODO: logic to switch between zkvm, vs plain code
-        let (result, post_state) = tick(request, state).expect("TODO");
+        let (response, post_state) = tick(request, state).expect("TODO");
 
-        println!("cur_idx={:?}, result={:?}", cur_idx, result);
+        let api_response = ApiResponse { response, global_index };
+        println!("engine: api_response={:?}", api_response);
+
+        response_sender.send(api_response).expect("todo");
+
         // In new background thread
         // Record stuff in DB
         // - the request, result and global nonce
         // - the hash of the state after the transition
         // - maybe the whole state?
 
-        state = post_state
+        state = post_state;
+        global_index += 1;
     }
 }
