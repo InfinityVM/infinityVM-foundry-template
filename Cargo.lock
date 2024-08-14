@@ -3025,9 +3025,11 @@ dependencies = [
  "alloy",
  "axum",
  "clob-core",
+ "eyre",
  "programs",
  "reth-db",
  "reth-db-api",
+ "thiserror",
  "tokio",
 ]
 

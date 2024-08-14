@@ -3,13 +3,17 @@ name = "node"
 version = "0.1.0"
 edition = "2021"
 
+[lints]
+workspace = true
+
 [dependencies]
 axum = { workspace = true }
 tokio = { workspace = true }
 reth-db-api = { workspace = true }
 reth-db = { workspace = true }
 alloy = { version = "0.2", features = ["full", "contract", "transport-http", "transport-ws", "network", "providers", "pubsub", "signer-local", "signer-keystore", "rpc-types-debug", "rpc-types-trace", "json-rpc", "rpc-client", "rlp"], default-features = false }
-
+thiserror = { workspace = true }
+eyre = { workspace = true }
 
 clob-core = { path = "../core" }
 programs = { path = "../programs"}

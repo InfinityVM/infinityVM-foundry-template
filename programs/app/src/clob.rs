@@ -1,4 +1,4 @@
-use clob_core::{api::Request, tick, State};
+use clob_core::{api::Request, tick, ClobState};
 use risc0_zkvm::guest::env::{self, Read};
 
 fn main() {
@@ -6,7 +6,7 @@ fn main() {
     let mut input_bytes = Vec::<u8>::new();
     env::stdin().read_slice(&mut input_bytes);
 
-    let (request, state): (Request, State) = borsh::from_slice(&input_bytes).expect("todo");
+    let (request, state): (Request, ClobState) = borsh::from_slice(&input_bytes).expect("todo");
 
     let response = {
         let response = tick(request, state).expect("todo");

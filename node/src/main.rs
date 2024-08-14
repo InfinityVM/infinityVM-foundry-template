@@ -1,4 +1,7 @@
-use clob_core::State as ClobState;
+//! The Infinity CLOB node binary.
+//!
+
+use clob_core::ClobState;
 use node::{engine, http_listen, ServerState};
 use tokio::join;
 

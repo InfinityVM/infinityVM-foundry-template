@@ -1,9 +1,12 @@
+//! CLOB execution engine.
+
 use clob_core::{
     api::{ApiResponse, Request},
-    tick, State as ClobState,
+    tick, ClobState,
 };
 use tokio::sync::{mpsc::Receiver, oneshot};
 
+/// Run the CLOB execution engine
 pub async fn run_engine(
     mut state: ClobState,
     mut receiver: Receiver<(Request, oneshot::Sender<ApiResponse>)>,
@@ -16,8 +19,7 @@ pub async fn run_engine(
         println!("engine: {:?}, response_sender: {:?}", request, response_sender);
 
         // In new background thread:
-        // - relay back the index of the transaction so we can return it as a preconf
-        // - write highest seen gidx to db
+        //
         // - write request to db, keyed by gidx
 
         // TODO: logic to switch between zkvm, vs plain code

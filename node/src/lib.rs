@@ -1,3 +1,5 @@
+//! The CLOB node.
+
 use axum::{extract::State as ExtractState, Json};
 use clob_core::api::{
     AddOrderRequest, ApiResponse, CancelOrderRequest, DepositRequest, Request, WithdrawRequest,
@@ -7,12 +9,15 @@ use tokio::sync::{mpsc::Sender, oneshot};
 pub mod db;
 pub mod engine;
 
-#[derive(Clone)]
+/// Stateful parts of rest server
+#[derive(Debug, Clone)]
 pub struct ServerState {
+    /// Engine send channel handle.
     pub engine_sender: Sender<(Request, oneshot::Sender<ApiResponse>)>,
     // TODO: read only db handle so we can read back order status and return order book view
 }
 
+/// Run the HTTP server.
 pub async fn http_listen(state: ServerState, listen_address: &str) {
     let app = axum::Router::new()
         .route("/deposit", axum::routing::post(deposit))

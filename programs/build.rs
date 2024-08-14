@@ -1,3 +1,5 @@
+//! Build script for buidling zkvm programs and embedding them in test contracts.
+
 use zkvm_utils::sol::{generate_solidity_files, Options};
 
 // Paths where the generated Solidity files will be written.

@@ -1,3 +1,5 @@
+//! Core logic and types of the `InfinityVM` CLOB.
+
 use std::collections::HashMap;
 
 use api::{
@@ -13,13 +15,16 @@ pub mod orderbook;
 use crate::api::FillStatus;
 use orderbook::OrderBook;
 
+/// Errors for this crate.
 #[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 pub enum Error {
+    /// An order could not be found
     OrderDoesNotExist,
 }
 
+/// The state of the universe for the CLOB.
 #[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
-pub struct State {
+pub struct ClobState {
     oid: u64,
     balances: HashMap<[u8; 20], UserBalance>,
     book: OrderBook,
@@ -27,14 +32,16 @@ pub struct State {
     order_status: HashMap<u64, FillStatus>,
 }
 
-pub fn deposit(req: DepositRequest, mut state: State) -> (DepositResponse, State) {
+/// Deposit user funds that can be used to place orders.
+pub fn deposit(req: DepositRequest, mut state: ClobState) -> (DepositResponse, ClobState) {
     // TODO, handle case of address already existing
     state.balances.insert(req.address, req.amounts);
 
     (DepositResponse { success: true }, state)
 }
 
-pub fn withdraw(req: WithdrawRequest, mut state: State) -> (WithdrawResponse, State) {
+/// Withdraw non-locked funds
+pub fn withdraw(req: WithdrawRequest, mut state: ClobState) -> (WithdrawResponse, ClobState) {
     let addr = req.address;
     let balance = state.balances.get_mut(&addr).expect("TODO");
     if balance.a < req.amounts.a || balance.b < req.amounts.b {
@@ -46,8 +53,12 @@ pub fn withdraw(req: WithdrawRequest, mut state: State) -> (WithdrawResponse, St
     }
 }
 
-pub fn cancel_order(req: CancelOrderRequest, mut state: State) -> (CancelOrderResponse, State) {
-    if let Ok(()) = state.book.cancel(req.oid) {
+/// Cancel an order.
+pub fn cancel_order(
+    req: CancelOrderRequest,
+    mut state: ClobState,
+) -> (CancelOrderResponse, ClobState) {
+    if matches!(state.book.cancel(req.oid), Ok(())) {
         let fill_status = state.order_status.remove(&req.oid);
         (CancelOrderResponse { success: true, fill_status }, state)
     } else {
@@ -55,11 +66,11 @@ pub fn cancel_order(req: CancelOrderRequest, mut state: State) -> (CancelOrderRe
     }
 }
 
-pub fn add_order(req: AddOrderRequest, mut state: State) -> (AddOrderResponse, State) {
+/// Add an order.
+pub fn add_order(req: AddOrderRequest, mut state: ClobState) -> (AddOrderResponse, ClobState) {
     let addr = req.address;
     let balance = state.balances.get_mut(&addr).unwrap();
 
-    // -- External
     if (req.is_buy && balance.b < req.size) || (!req.is_buy && balance.a < req.size) {
         return (AddOrderResponse { success: false, status: None }, state);
     };
@@ -67,13 +78,9 @@ pub fn add_order(req: AddOrderRequest, mut state: State) -> (AddOrderResponse, S
     let order = req.to_order(state.oid);
     let order_id = order.oid;
     state.oid += 1;
-    // --
 
-    // --- Internal
     let (remaining_amount, fills) = state.book.limit(order);
-    // ---
 
-    // -- External
     let fill_size = req.size - remaining_amount;
     if req.is_buy {
         balance.b -= req.size;
@@ -102,14 +109,14 @@ pub fn add_order(req: AddOrderRequest, mut state: State) -> (AddOrderResponse, S
         address: req.address,
     };
     state.order_status.insert(order_id, fill_status.clone());
-    // --
 
     let resp = AddOrderResponse { success: true, status: Some(fill_status) };
 
     (resp, state)
 }
 
-pub fn tick(request: Request, state: State) -> Result<(Response, State), Error> {
+/// A tick is will execute a single request against the CLOB state.
+pub fn tick(request: Request, state: ClobState) -> Result<(Response, ClobState), Error> {
     match request {
         Request::AddOrder(req) => {
             let (resp, state) = add_order(req, state);
@@ -130,10 +137,13 @@ pub fn tick(request: Request, state: State) -> Result<(Response, State), Error> 
     }
 }
 
+/// Trait for the sha256 hash of a borsh serialized type
 pub trait BorshSha256 {
+    /// The sha256 hash of a borsh serialized type
     fn borsh_sha256(&self) -> [u8; 32];
 }
 
+// Blanket impl. for any type that implements borsh serialize.
 impl<T: BorshSerialize> BorshSha256 for T {
     fn borsh_sha256(&self) -> [u8; 32] {
         use sha2::{Digest, Sha256};
@@ -144,3 +154,28 @@ impl<T: BorshSerialize> BorshSha256 for T {
         hash.into()
     }
 }
+
+/// Macro to implement Compress and Decompress for borsh serializable types.
+/// This is a trait need for types that are written to the DB.
+macro_rules! impl_compress_decompress {
+    ($name:ident) => {
+        impl reth_db::table::Compress for $name {
+            type Compressed = Vec<u8>;
+
+            fn compress_to_buf<B: bytes::buf::BufMut + AsMut<[u8]>>(self, dest: &mut B) {
+                let src = borsh::to_vec(&self).expect("borsh serialize works. qed.");
+                dest.put(&src[..])
+            }
+        }
+
+        impl reth_db::table::Decompress for $name {
+            fn decompress<B: AsRef<[u8]>>(value: B) -> Result<Self, reth_db::DatabaseError> {
+                borsh::from_slice(value.as_ref()).map_err(|_| reth_db::DatabaseError::Decode)
+            }
+        }
+    };
+}
+
+impl_compress_decompress! { Request }
+impl_compress_decompress! { Response }
+impl_compress_decompress! { ClobState }

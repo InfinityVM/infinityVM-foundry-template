@@ -1,3 +1,5 @@
+//! Binding to ZKVM programs.
+
 include!(concat!(env!("OUT_DIR"), "/methods.rs"));
 
 #[cfg(test)]

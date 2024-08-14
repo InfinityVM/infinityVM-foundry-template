@@ -1,17 +1,57 @@
-use clob_core::api::Request;
+//! Node database implementation.
+
 use reth_db::{
-    Database, TableType, TableViewer,
+    create_db,
+    mdbx::{DatabaseArguments, DatabaseFlags},
+    models::ClientVersion,
+    transaction::DbTx,
+    DatabaseEnv, DatabaseError, TableType,
 };
+use std::{ops::Deref, path::Path};
 
-use reth_db::tables;
-use std::fmt;
+pub mod tables;
 
-reth_db::tables! {
-    /// Store global index
-    /// 0 => global index of latest seen
-    /// 1 => global index of latest processed
-    table GlobalIndexTable<Key = u32, Value = u64>;
+/// DB module errors
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    /// Error from reth-mdbx lib
+    #[error("mdbx (database): {0}")]
+    GenericRethMdbx(#[from] eyre::Report),
 
-    /// Requests table, keyed by global index
-    table RequestTable<Key = u64, Value = Request>;
+    /// Reth mdbx database backend error
+    #[error("mdbx (database): {0}")]
+    RethMdbx(#[from] reth_db::mdbx::Error),
+
+    /// Reth database error
+    #[error("reth database: {0}")]
+    RethDbError(#[from] DatabaseError),
+}
+
+/// Open a DB at `path`. Creates the DB if it does not exist.
+pub fn init_db<P: AsRef<Path>>(path: P) -> Result<DatabaseEnv, Error> {
+    let client_version = ClientVersion::default();
+    let args = DatabaseArguments::new(client_version.clone());
+
+    let db = create_db(path, args)?;
+    db.record_client_version(client_version)?;
+
+    {
+        // This logic is largely from reth's `create_tables` fn, but uses our tables
+        // instead of their's
+        let tx = db.deref().begin_rw_txn().map_err(|e| DatabaseError::InitTx(e.into()))?;
+
+        for table in tables::Tables::ALL {
+            let flags = match table.table_type() {
+                TableType::Table => DatabaseFlags::default(),
+                TableType::DupSort => DatabaseFlags::DUP_SORT,
+            };
+
+            tx.create_db(Some(table.name()), flags)
+                .map_err(|e| DatabaseError::CreateTable(e.into()))?;
+        }
+
+        tx.commit().map_err(|e| DatabaseError::Commit(e.into()))?;
+    }
+
+    Ok(db)
 }

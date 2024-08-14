@@ -1,3 +1,5 @@
+//! The orderbook for maintaining and matching limit orders of a single pair.
+
 use std::collections::{BTreeMap, HashMap};
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -8,10 +10,14 @@ use crate::{
     Error,
 };
 
+/// Orderbook type.
 #[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 pub struct OrderBook {
+    /// All bid limit orders.
     pub bids: BTreeMap<u64, Vec<Order>>,
+    /// All ask limit orders orders.
     pub asks: BTreeMap<u64, Vec<Order>>,
+    /// Map of order ID to level. A level is orders that all have the same price
     pub oid_to_level: HashMap<u64, u64>,
 }
 
@@ -40,6 +46,7 @@ fn fill_at_price_level(level: &mut Vec<Order>, taker_oid: u64, size: u64) -> (u6
 }
 
 impl OrderBook {
+    /// Get the max bid.
     pub fn bid_max(&self) -> u64 {
         if let Some(level) = self.bids.iter().next_back() {
             *level.0
@@ -48,6 +55,7 @@ impl OrderBook {
         }
     }
 
+    /// Get the mid bid.
     pub fn ask_min(&self) -> u64 {
         if let Some(level) = self.asks.iter().next() {
             *level.0
@@ -67,6 +75,7 @@ impl OrderBook {
         }
     }
 
+    /// Add a limit order.
     pub fn limit(&mut self, order: Order) -> (u64, Vec<OrderFill>) {
         let mut remaining_amount = order.size;
         let mut ask_min = self.ask_min();
@@ -111,6 +120,7 @@ impl OrderBook {
         (remaining_amount, fills)
     }
 
+    /// Cancel a limit order.
     pub fn cancel(&mut self, oid: u64) -> Result<(), Error> {
         let level_price = self.oid_to_level.get(&oid).ok_or(Error::OrderDoesNotExist)?;
         if self.bids.contains_key(level_price) {
