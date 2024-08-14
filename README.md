@@ -1,4 +1,14 @@
-# InfinityVM Foundry Template
+Infinity CLOB PoC
+
+TODO:
+
+- [ ] state persistence/DB impl
+- [ ] e2e test/demo
+- [ ] protocol spec
+- [ ] architecture diagram
+
+--
+## InfinityVM Foundry Template
 
 This repository implements an example application using InfinityVM. InfinityVM enables developers to use expressive offchain compute to build and enhance their EVM applications.
 
