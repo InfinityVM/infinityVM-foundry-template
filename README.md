@@ -2,9 +2,10 @@ Infinity CLOB PoC
 
 TODO:
 
-- [ ] state persistence/DB impl (zeke)
+- [x] state persistence/DB impl (zeke)
 - [ ] endpoints for viewing current orderbook state
-- [ ] e2e test/demo (zeke)
+- [ ] e2e test/demo of just http based flows
+ (zeke)
 - [ ] protocol spec
 - [ ] architecture diagram
 - [ ] modify zkvm program to batch process
@@ -13,6 +14,8 @@ TODO:
 - [ ] smart contracts
    - [ ] withdraw / deposit
    - [ ] filled orders
+
+- [ ] if the general structure of this server and fraud proofing makes sense, we can make it into an sdk that primarily has zkvm STF, execution engine, and batcher.
 
 ## Docs
 
