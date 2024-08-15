@@ -7,8 +7,6 @@ contracts/cache/
 contracts/out/
 contracts/data/
 
-server/build
-
 # Ignores development broadcast logs
 contracts/broadcast/**
 
@@ -22,3 +20,5 @@ programs/**/target
 programs/**/elf
 /target/
 /debug/
+
+**/tmp-data-dir/

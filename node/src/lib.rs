@@ -1,13 +1,17 @@
 //! The CLOB node.
 
 use axum::{extract::State as ExtractState, Json};
-use clob_core::api::{
-    AddOrderRequest, ApiResponse, CancelOrderRequest, DepositRequest, Request, WithdrawRequest,
+use clob_core::{
+    api::{
+        AddOrderRequest, ApiResponse, CancelOrderRequest, DepositRequest, Request, WithdrawRequest,
+    },
+    ClobState,
 };
 use tokio::sync::{mpsc::Sender, oneshot};
 
 pub mod db;
 pub mod engine;
+
 
 /// Stateful parts of rest server
 #[derive(Debug, Clone)]
