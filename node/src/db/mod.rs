@@ -4,7 +4,6 @@ use reth_db::{
     create_db,
     mdbx::{DatabaseArguments, DatabaseFlags},
     models::ClientVersion,
-    transaction::DbTx,
     DatabaseEnv, DatabaseError, TableType,
 };
 use std::{ops::Deref, path::Path};

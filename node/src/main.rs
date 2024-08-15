@@ -1,6 +1,5 @@
 //! The Infinity CLOB node binary.
 
-use clob_core::ClobState;
 use node::{engine, http_listen, ServerState};
 use std::sync::Arc;
 use tokio::join;
