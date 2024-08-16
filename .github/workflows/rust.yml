@@ -38,7 +38,7 @@ jobs:
 
       - uses: taiki-e/install-action@cargo-binstall
 
-      - name: Install risc0 tooling
+      - name: install risc0 tooling
         shell: bash
         run: |
           cargo binstall cargo-risczero -y
@@ -50,9 +50,11 @@ jobs:
         with:
           version: nightly
 
-      - run: cargo build
+      - name: run cargo build
+        run: cargo build
 
-      - run:  cargo clippy
+      - name: run cargo clippy
+        run: cargo clippy
         env:
           RISC0_SKIP_BUILD: true
           RUSTFLAGS: "-D warnings"
@@ -70,7 +72,7 @@ jobs:
 
       - uses: taiki-e/install-action@cargo-binstall
 
-      - name: Install risc0 tooling
+      - name: install risc0 tooling
         shell: bash
         run: |
           cargo binstall cargo-risczero -y
@@ -97,4 +99,21 @@ jobs:
         with:
           components: rustfmt
 
-      - run: cargo +nightly fmt --all --check
+      - name: run cargo fmt
+        run: cargo +nightly fmt --all --check
+
+  unused-deps:
+    name: unused deps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@nightly
+
+      - name: install cargo-machete
+        run: cargo install cargo-machete
+
+      - name: run cargo-machete
+        run: cargo machete
