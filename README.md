@@ -7,11 +7,11 @@ Functional PoC:
 - [x] state persistence/DB impl (zeke)
 - [ ] endpoints for viewing current orderbook state
 - [ ] e2e test/demo of just http based flows
+- [ ] batcher logic to create batches. Initially this should just submit all batches to CN
  (zeke)
+- [ ] modify zkvm program to batch process
 - [ ] protocol spec
 - [ ] architecture diagram
-- [ ] modify zkvm program to batch process
-- [ ] batcher logic to create batches. Initially this should just submit all batches to CN
 - [ ] event listener logic for listening to withdraw / deposits
 - [ ] smart contracts
    - [ ] withdraw / deposit
@@ -19,8 +19,16 @@ Functional PoC:
 
 More production readiness type things:
 
+- [ ] design a system for streaming state out. We may want a secondary node just for state viewing requests (potentially also verifying)
 - [ ] verifying deposits
 - [ ] verifying txns signed by accounts that have deposit
+
+Future CLOB enhancements:
+
+- [ ] needs test coverage
+- [ ] underflow/overflow for arithmetic
+- [ ] leverage
+- [ ] generalize across pairs - might be big change
 
 - [ ] if the general structure of this server and fraud proofing makes sense, we can make it into an sdk that primarily has zkvm STF, execution engine, and batcher.
 
