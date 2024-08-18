@@ -15,7 +15,7 @@ async fn main() {
 
     let (engine_sender, engine_receiver) = tokio::sync::mpsc::channel(CHANEL_SIZE);
 
-    let server_state = ServerState { engine_sender };
+    let server_state = ServerState { engine_sender, db: Arc::clone(&db) };
     let http_listen_address = "127.0.0.1:3001";
 
     let server_handle = http_listen(server_state, http_listen_address);

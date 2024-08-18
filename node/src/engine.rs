@@ -21,9 +21,9 @@ use tokio::{
     task::JoinSet,
 };
 
-const START_GLOBAL_INDEX: u64 = 0;
+pub(crate) const START_GLOBAL_INDEX: u64 = 0;
 
-fn read_start_up_values<D: Database + 'static>(db: Arc<D>) -> (u64, ClobState) {
+pub(crate) fn read_start_up_values<D: Database + 'static>(db: Arc<D>) -> (u64, ClobState) {
     let tx = db.tx().expect("todo");
 
     let global_index = tx
@@ -79,7 +79,7 @@ pub async fn run_engine<D>(
             tx.commit().expect("todo");
         });
 
-        // TODO: logic to switch between zkvm, vs plain code
+        //
         #[cfg(feature = "zkvm-execute")]
         let (response, post_state) = {
             let zkvm_input =

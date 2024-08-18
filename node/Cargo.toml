@@ -30,4 +30,5 @@ risc0-zkvm = { workspace = true, optional = true}
 
 [features]
 default = ["zkvm-execute"]
+# Enable the zkvm and execute all requests in **both** the zkvm and natively, comparing outputs.
 zkvm-execute = ["risc0-zkvm"]
