@@ -1,3 +1,5 @@
+//! ZKVM program for running the tick
+
 use clob_core::{api::Request, tick, ClobState};
 use risc0_zkvm::guest::env::{self, Read};
 

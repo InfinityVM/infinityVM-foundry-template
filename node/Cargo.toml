@@ -8,12 +8,18 @@ workspace = true
 
 [dependencies]
 axum = { workspace = true }
-tokio = { workspace = true }
-reth-db-api = { workspace = true }
-reth-db = { workspace = true }
 alloy = { version = "0.2", features = ["full", "contract", "transport-http", "transport-ws", "network", "providers", "pubsub", "signer-local", "signer-keystore", "rpc-types-debug", "rpc-types-trace", "json-rpc", "rpc-client", "rlp"], default-features = false }
+tokio = { workspace = true }
 thiserror = { workspace = true }
 eyre = { workspace = true }
+
+# DB deps
+bytes = { workspace = true }
+borsh = { workspace = true }
+serde = { workspace = true }
+paste = { workspace = true }
+reth-db-api = { workspace = true }
+reth-db = { workspace = true }
 
 clob-core = { path = "../core" }
 programs = { path = "../programs"}

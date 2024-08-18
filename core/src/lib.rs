@@ -1,4 +1,6 @@
 //! Core logic and types of the `InfinityVM` CLOB.
+//!
+//! Note that everything in here needs to be able to target the ZKVM architecture
 
 use std::collections::HashMap;
 
@@ -155,27 +157,27 @@ impl<T: BorshSerialize> BorshSha256 for T {
     }
 }
 
-/// Macro to implement Compress and Decompress for borsh serializable types.
-/// This is a trait need for types that are written to the DB.
-macro_rules! impl_compress_decompress {
-    ($name:ident) => {
-        impl reth_db::table::Compress for $name {
-            type Compressed = Vec<u8>;
+// Macro to implement Compress and Decompress for borsh serializable types.
+// This is a trait need for types that are written to the DB.
+// macro_rules! impl_compress_decompress {
+//     ($name:ident) => {
+//         impl reth_db_api::table::Compress for $name {
+//             type Compressed = Vec<u8>;
 
-            fn compress_to_buf<B: bytes::buf::BufMut + AsMut<[u8]>>(self, dest: &mut B) {
-                let src = borsh::to_vec(&self).expect("borsh serialize works. qed.");
-                dest.put(&src[..])
-            }
-        }
+//             fn compress_to_buf<B: bytes::buf::BufMut + AsMut<[u8]>>(self, dest: &mut B) {
+//                 let src = borsh::to_vec(&self).expect("borsh serialize works. qed.");
+//                 dest.put(&src[..])
+//             }
+//         }
 
-        impl reth_db::table::Decompress for $name {
-            fn decompress<B: AsRef<[u8]>>(value: B) -> Result<Self, reth_db::DatabaseError> {
-                borsh::from_slice(value.as_ref()).map_err(|_| reth_db::DatabaseError::Decode)
-            }
-        }
-    };
-}
+//         impl reth_db_api::table::Decompress for $name {
+//             fn decompress<B: AsRef<[u8]>>(value: B) -> Result<Self, reth_db_api::DatabaseError> {
+//                 borsh::from_slice(value.as_ref()).map_err(|_| reth_db_api::DatabaseError::Decode)
+//             }
+//         }
+//     };
+// }
 
-impl_compress_decompress! { Request }
-impl_compress_decompress! { Response }
-impl_compress_decompress! { ClobState }
+// impl_compress_decompress! { Request }
+// impl_compress_decompress! { Response }
+// impl_compress_decompress! { ClobState }

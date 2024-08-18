@@ -13,6 +13,7 @@ pub const SEEN_GLOBAL_INDEX_KEY: u32 = 0;
 /// Key for highest global index that has ben processed. This is gte seen.
 pub const PROCESSED_GLOBAL_INDEX_KEY: u32 = 1;
 
+pub mod models;
 pub mod tables;
 
 /// DB module errors

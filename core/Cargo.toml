@@ -4,14 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [lints]
-workspace = true
+rust.missing_debug_implementations = "warn"
+rust.missing_docs = "warn"
+rust.unreachable_pub = "warn"
+rust.unused_must_use = "deny"
+rust.rust_2018_idioms = { level = "deny", priority = -1 }
+rustdoc.all = "warn"
 
 [dependencies]
-serde = { workspace = true }
-borsh = { workspace = true }
-sha2 = { workspace = true }
-alloy-primitives = { workspace = true }
-bytes = { workspace = true }
-
-# not ideal to have this here
-reth-db = { workspace = true }
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+borsh = { version = "1", features = ["derive", "std"], default-features = false }
+sha2 = { version = "0.10", features = ["std"], default-features = false }
+alloy-primitives = { version = "0.7", default-features = false }

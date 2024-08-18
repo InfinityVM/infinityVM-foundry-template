@@ -1,9 +1,6 @@
 //! Tables for the database.
 
-use clob_core::{
-    api::{Request, Response},
-    ClobState,
-};
+use crate::db::models::{ClobStateModel, RequestModel, ResponseModel};
 use reth_db::{tables, TableType, TableViewer};
 use std::fmt;
 
@@ -14,11 +11,11 @@ reth_db::tables! {
     table GlobalIndexTable<Key = u32, Value = u64>;
 
     /// Requests table, keyed by global index
-    table RequestTable<Key = u64, Value = Request>;
+    table RequestTable<Key = u64, Value = RequestModel>;
 
     /// Responses table, keyed by global index
-    table ResponseTable<Key = u64, Value = Response>;
+    table ResponseTable<Key = u64, Value = ResponseModel>;
 
     /// ClOB State table, keyed by global index
-    table ClobStateTable<Key = u64, Value = ClobState>;
+    table ClobStateTable<Key = u64, Value = ClobStateModel>;
 }

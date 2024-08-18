@@ -1,6 +1,7 @@
 //! CLOB execution engine.
 
 use crate::db::{
+    models::{ClobStateModel, RequestModel, ResponseModel},
     tables::{ClobStateTable, GlobalIndexTable, RequestTable, ResponseTable},
     PROCESSED_GLOBAL_INDEX_KEY, SEEN_GLOBAL_INDEX_KEY,
 };
@@ -35,6 +36,7 @@ fn read_start_up_values<D: Database + 'static>(db: Arc<D>) -> (u64, ClobState) {
         tx.get::<ClobStateTable>(global_index)
             .expect("todo: db errors")
             .expect("todo: could not find state when some was expected")
+            .0
     };
 
     tx.commit().expect("todo");
@@ -68,7 +70,7 @@ pub async fn run_engine<D>(
         handles.spawn(async move {
             let tx = db2.tx_mut().expect("todo");
             tx.put::<GlobalIndexTable>(SEEN_GLOBAL_INDEX_KEY, global_index).expect("todo");
-            tx.put::<RequestTable>(global_index, request2).expect("todo");
+            tx.put::<RequestTable>(global_index, RequestModel(request2)).expect("todo");
             tx.commit().expect("todo");
         });
 
@@ -84,8 +86,8 @@ pub async fn run_engine<D>(
         handles.spawn(async move {
             let tx = db2.tx_mut().expect("todo");
             tx.put::<GlobalIndexTable>(PROCESSED_GLOBAL_INDEX_KEY, global_index).expect("todo");
-            tx.put::<ResponseTable>(global_index, response2).expect("todo");
-            tx.put::<ClobStateTable>(global_index, post_state2).expect("todo");
+            tx.put::<ResponseTable>(global_index, ResponseModel(response2)).expect("todo");
+            tx.put::<ClobStateTable>(global_index, ClobStateModel(post_state2)).expect("todo");
             tx.commit().expect("todo");
         });
 
