@@ -3017,6 +3017,7 @@ dependencies = [
  "programs",
  "reth-db",
  "reth-db-api",
+ "risc0-zkvm",
  "serde",
  "thiserror",
  "tokio",

@@ -21,5 +21,13 @@ paste = { workspace = true }
 reth-db-api = { workspace = true }
 reth-db = { workspace = true }
 
+# local deps
 clob-core = { path = "../core" }
 programs = { path = "../programs"}
+
+# zkvm execute deps
+risc0-zkvm = { workspace = true, optional = true}
+
+[features]
+default = ["zkvm-execute"]
+zkvm-execute = ["risc0-zkvm"]

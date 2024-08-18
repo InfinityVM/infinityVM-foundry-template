@@ -5,6 +5,7 @@ Infinity CLOB PoC
 Functional PoC:
 
 - [x] state persistence/DB impl (zeke)
+- [ ] error handling
 - [ ] endpoints for viewing current orderbook state
 - [ ] e2e test/demo of just http based flows
 - [ ] batcher logic to create batches. Initially this should just submit all batches to CN

@@ -6,13 +6,15 @@ use crate::db::{
     PROCESSED_GLOBAL_INDEX_KEY, SEEN_GLOBAL_INDEX_KEY,
 };
 use clob_core::{
-    api::{ApiResponse, Request},
+    api::{ApiResponse, Request, Response},
     tick, ClobState,
 };
 use reth_db::{
     transaction::{DbTx, DbTxMut},
     Database,
 };
+#[cfg(feature = "zkvm-execute")]
+use risc0_zkvm::{Executor, ExecutorEnv, LocalProver};
 use std::sync::Arc;
 use tokio::{
     sync::{mpsc::Receiver, oneshot},
@@ -56,6 +58,9 @@ pub async fn run_engine<D>(
     // TODO add logic to clear the joinset
     let mut handles = JoinSet::new();
 
+    #[cfg(feature = "zkvm-execute")]
+    let zkvm_executor = LocalProver::new("locals only");
+
     loop {
         global_index += 1;
 
@@ -75,6 +80,24 @@ pub async fn run_engine<D>(
         });
 
         // TODO: logic to switch between zkvm, vs plain code
+        #[cfg(feature = "zkvm-execute")]
+        let (response, post_state) = {
+            let zkvm_input =
+                borsh::to_vec(&(&request, &state)).expect("borsh serialize works. qed.");
+            let env = ExecutorEnv::builder().write_slice(&zkvm_input).build().unwrap();
+            let execute_info = zkvm_executor.execute(env, programs::CLOB_ELF).unwrap();
+
+            let (z_response, z_post_state): (Response, ClobState) =
+                borsh::from_slice(&execute_info.journal.bytes).expect("todo");
+
+            let (n_response, n_post_state) = tick(request, state).expect("TODO");
+
+            assert_eq!(z_response, n_response);
+            assert_eq!(z_post_state, n_post_state);
+
+            (n_response, n_post_state)
+        };
+        #[cfg(not(feature = "zkvm-execute"))]
         let (response, post_state) = tick(request, state).expect("TODO");
 
         // In a background task persist: processed index, response, and new state.

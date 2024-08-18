@@ -11,7 +11,9 @@ use crate::{
 };
 
 /// Orderbook type.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+)]
 pub struct OrderBook {
     /// All bid limit orders.
     pub bids: BTreeMap<u64, Vec<Order>>,

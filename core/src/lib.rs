@@ -25,7 +25,9 @@ pub enum Error {
 }
 
 /// The state of the universe for the CLOB.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+)]
 pub struct ClobState {
     oid: u64,
     balances: HashMap<[u8; 20], UserBalance>,

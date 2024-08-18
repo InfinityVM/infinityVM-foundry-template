@@ -4,7 +4,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
 /// All possible requests that can go into the clob engine.
-#[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Request {
     /// [`AddOrderRequest`]
@@ -18,7 +18,7 @@ pub enum Request {
 }
 
 /// All possible responses from the clob engine.
-#[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Response {
     /// [`AddOrderResponse`]
@@ -32,7 +32,7 @@ pub enum Response {
 }
 
 /// A response from the clob engine with the global index of the request.
-#[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApiResponse {
     /// The response from processing the request with one engine tick
@@ -43,7 +43,9 @@ pub struct ApiResponse {
 }
 
 /// Add a limit order.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct AddOrderRequest {
     /// Account placing the order.
@@ -64,7 +66,9 @@ impl AddOrderRequest {
 }
 
 /// Response to [`AddOrderRequest`]
-#[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct AddOrderResponse {
     /// If the request was fully processed.
@@ -75,7 +79,7 @@ pub struct AddOrderResponse {
 }
 
 /// Cancel a limit order.
-#[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CancelOrderRequest {
     /// Order ID.
@@ -83,7 +87,7 @@ pub struct CancelOrderRequest {
 }
 
 /// Response to [`CancelOrderRequest`].
-#[derive(Clone, Debug, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CancelOrderResponse {
     /// If the request was fully processed.
@@ -93,7 +97,9 @@ pub struct CancelOrderResponse {
 }
 
 /// Deposit funds that can be use to place orders.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct DepositRequest {
     /// Account to credit funds to.
@@ -103,7 +109,9 @@ pub struct DepositRequest {
 }
 
 /// Response to [`DepositRequest`]
-#[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct DepositResponse {
     /// If the request was fully processed.
@@ -111,7 +119,9 @@ pub struct DepositResponse {
 }
 
 /// Withdraw non locked funds.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct WithdrawRequest {
     /// Account to debit funds from
@@ -121,7 +131,9 @@ pub struct WithdrawRequest {
 }
 
 /// Response to [`WithdrawRequest`].
-#[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct WithdrawResponse {
     /// If the request was fully processed.
@@ -129,7 +141,9 @@ pub struct WithdrawResponse {
 }
 
 /// All balances for a user.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct UserBalance {
     /// Users funds for selling
@@ -140,7 +154,7 @@ pub struct UserBalance {
 }
 
 /// A limit order.
-#[derive(Deserialize, Serialize, Debug, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Order {
     /// If the order is buy or sell.
@@ -161,7 +175,7 @@ impl Order {
 }
 
 /// That current status of how filled an order is.
-#[derive(Deserialize, Serialize, Debug, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FillStatus {
     /// Order ID
@@ -177,7 +191,7 @@ pub struct FillStatus {
 }
 
 /// A match of two orders.
-#[derive(Deserialize, Serialize, Debug, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderFill {
     /// Maker order ID.
