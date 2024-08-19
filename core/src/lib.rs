@@ -24,6 +24,11 @@ pub enum Error {
     OrderDoesNotExist,
 }
 
+/// Input to the STF. Expected to be the exact input given to the ZKVM program.
+pub type StfInput = (Request, ClobState);
+/// Output from the STF. Expected to be the exact output from the ZKVM program.
+pub type StfOutput = (Response, ClobState);
+
 /// The state of the universe for the CLOB.
 #[derive(
     Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
@@ -34,6 +39,25 @@ pub struct ClobState {
     book: OrderBook,
     // TODO: ensure we are wiping order status for filled orders
     order_status: HashMap<u64, FillStatus>,
+}
+
+impl ClobState {
+    /// Get the oid.
+    pub fn oid(&self) -> u64 {
+        self.oid
+    }
+    /// Get the balances.
+    pub fn balances(&self) -> &HashMap<[u8; 20], UserBalance> {
+        &self.balances
+    }
+    /// Get the book
+    pub fn book(&self) -> &OrderBook {
+        &self.book
+    }
+    /// Get the order status.
+    pub fn order_status(&self) -> &HashMap<u64, FillStatus> {
+        &self.order_status
+    }
 }
 
 /// Deposit user funds that can be used to place orders.
@@ -158,28 +182,3 @@ impl<T: BorshSerialize> BorshSha256 for T {
         hash.into()
     }
 }
-
-// Macro to implement Compress and Decompress for borsh serializable types.
-// This is a trait need for types that are written to the DB.
-// macro_rules! impl_compress_decompress {
-//     ($name:ident) => {
-//         impl reth_db_api::table::Compress for $name {
-//             type Compressed = Vec<u8>;
-
-//             fn compress_to_buf<B: bytes::buf::BufMut + AsMut<[u8]>>(self, dest: &mut B) {
-//                 let src = borsh::to_vec(&self).expect("borsh serialize works. qed.");
-//                 dest.put(&src[..])
-//             }
-//         }
-
-//         impl reth_db_api::table::Decompress for $name {
-//             fn decompress<B: AsRef<[u8]>>(value: B) -> Result<Self, reth_db_api::DatabaseError> {
-//                 borsh::from_slice(value.as_ref()).map_err(|_| reth_db_api::DatabaseError::Decode)
-//             }
-//         }
-//     };
-// }
-
-// impl_compress_decompress! { Request }
-// impl_compress_decompress! { Response }
-// impl_compress_decompress! { ClobState }

@@ -41,7 +41,7 @@ contract Deployer is Script, Utils {
 
         // Set ELF paths
         jobManager.setElfPath(
-            bytes32(0xf8046a272f5303d761252e1174c5670f733f043e58362a81fc439c842df9ffcc),
+            bytes32(0xf80a9cec183e5a6d25cd1c13ece10441a22963deb790f6f27aff5301c6465f01),
             "target/riscv-guest/riscv32im-risc0-zkvm-elf/release/clob"
         );
 

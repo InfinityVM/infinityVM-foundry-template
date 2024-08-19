@@ -6,8 +6,8 @@ use crate::db::{
     PROCESSED_GLOBAL_INDEX_KEY, SEEN_GLOBAL_INDEX_KEY,
 };
 use clob_core::{
-    api::{ApiResponse, Request, Response},
-    tick, ClobState,
+    api::{ApiResponse, Request},
+    tick, ClobState, StfOutput,
 };
 use reth_db::{
     transaction::{DbTx, DbTxMut},
@@ -20,6 +20,7 @@ use tokio::{
     sync::{mpsc::Receiver, oneshot},
     task::JoinSet,
 };
+use tracing::{info, instrument};
 
 pub(crate) const START_GLOBAL_INDEX: u64 = 0;
 
@@ -47,6 +48,7 @@ pub(crate) fn read_start_up_values<D: Database + 'static>(db: Arc<D>) -> (u64, C
 }
 
 /// Run the CLOB execution engine
+#[instrument(skip_all)]
 pub async fn run_engine<D>(
     mut receiver: Receiver<(Request, oneshot::Sender<ApiResponse>)>,
     db: Arc<D>,
@@ -67,7 +69,7 @@ pub async fn run_engine<D>(
         // TODO: refactor so this recieves a nonce and then uses that nonce to read from DB
         // This should help ensure ordering
         let (request, response_sender) = receiver.recv().await.expect("todo");
-        println!("engine: {:?}, response_sender: {:?}", request, response_sender);
+        info!(?request);
 
         // In background thread persist the index and request
         let request2 = request.clone();
@@ -79,15 +81,19 @@ pub async fn run_engine<D>(
             tx.commit().expect("todo");
         });
 
-        //
         #[cfg(feature = "zkvm-execute")]
         let (response, post_state) = {
             let zkvm_input =
                 borsh::to_vec(&(&request, &state)).expect("borsh serialize works. qed.");
-            let env = ExecutorEnv::builder().write_slice(&zkvm_input).build().unwrap();
+            let env = ExecutorEnv::builder()
+                .write::<u32>(&(zkvm_input.len() as u32))
+                .expect("u32 is always writable")
+                .write_slice(&zkvm_input)
+                .build()
+                .unwrap();
             let execute_info = zkvm_executor.execute(env, programs::CLOB_ELF).unwrap();
 
-            let (z_response, z_post_state): (Response, ClobState) =
+            let (z_response, z_post_state): StfOutput =
                 borsh::from_slice(&execute_info.journal.bytes).expect("todo");
 
             let (n_response, n_post_state) = tick(request, state).expect("TODO");
@@ -115,7 +121,6 @@ pub async fn run_engine<D>(
         });
 
         let api_response = ApiResponse { response, global_index };
-        println!("engine: api_response={:?}", api_response);
 
         response_sender.send(api_response).expect("todo");
 

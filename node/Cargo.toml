@@ -12,6 +12,8 @@ alloy = { version = "0.2", features = ["full", "contract", "transport-http", "tr
 tokio = { workspace = true }
 thiserror = { workspace = true }
 eyre = { workspace = true }
+tracing = "0.1"
+tracing-subscriber = "0.3"
 
 # DB deps
 bytes = { workspace = true }
@@ -28,8 +30,9 @@ programs = { path = "../programs"}
 # zkvm execute deps
 risc0-zkvm = { workspace = true, optional = true}
 
-[dev-dependencies]
 serde_json = "1"
+
+[dev-dependencies]
 tower = { version = "0.4", features = ["util"] }
 http-body-util = "0"
 tempfile = "3"
