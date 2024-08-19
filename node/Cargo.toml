@@ -28,6 +28,13 @@ programs = { path = "../programs"}
 # zkvm execute deps
 risc0-zkvm = { workspace = true, optional = true}
 
+[dev-dependencies]
+serde_json = "1"
+tower = { version = "0.4", features = ["util"] }
+http-body-util = "0"
+tempfile = "3"
+mime = "0"
+
 [features]
 default = ["zkvm-execute"]
 # Enable the zkvm and execute all requests in **both** the zkvm and natively, comparing outputs.

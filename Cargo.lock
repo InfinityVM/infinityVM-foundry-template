@@ -3013,14 +3013,19 @@ dependencies = [
  "bytes",
  "clob-core",
  "eyre",
+ "http-body-util",
+ "mime",
  "paste",
  "programs",
  "reth-db",
  "reth-db-api",
  "risc0-zkvm",
  "serde",
+ "serde_json",
+ "tempfile",
  "thiserror",
  "tokio",
+ "tower",
 ]
 
 [[package]]
@@ -3457,10 +3462,7 @@ dependencies = [
 name = "programs"
 version = "0.1.0"
 dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
  "risc0-build",
- "risc0-zkvm",
  "zkvm-utils",
 ]
 
