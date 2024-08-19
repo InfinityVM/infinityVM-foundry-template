@@ -85,7 +85,7 @@ contract JobManager is
     function createJob(uint64 nonce, bytes32 programID, bytes calldata programInput, uint64 maxCycles) external override returns (bytes32) {
         address consumer = msg.sender;
         bytes32 jobID = keccak256(abi.encodePacked(nonce, consumer));
-       _createJob(nonce, jobID, programID, maxCycles, consumer);
+       _createJob(nonce, jobID, programID, maxCycles, consumer, programInput);
         emit JobCreated(jobID, maxCycles, programID, programInput);
 
         string memory elfPath = getElfPath(programID);
@@ -96,9 +96,10 @@ contract JobManager is
         return jobID;
     }
 
-    function _createJob(uint64 nonce, bytes32 jobID, bytes32 programID, uint64 maxCycles, address consumer) internal {
+    function _createJob(uint64 nonce, bytes32 jobID, bytes32 programID, uint64 maxCycles, address consumer, bytes memory programInput) internal {
         require(jobIDToMetadata[jobID].status == 0, "JobManager.createJob: job already exists with this nonce and consumer");
         jobIDToMetadata[jobID] = JobMetadata(programID, maxCycles, consumer, JOB_STATE_PENDING);
+        Consumer(consumer).setProgramInputsForJob(jobID, programInput);
         Consumer(consumer).updateLatestNonce(nonce);
     }
 
@@ -156,7 +157,7 @@ contract JobManager is
         require(ECDSA.tryRecover(resultHash, signatureOnResult) == coprocessorOperator, "JobManager.submitResultForOffchainJob: Invalid signature on result");
 
         // Create a job and set program inputs on consumer
-        _createJob(request.nonce, jobID, request.programID, request.maxCycles, request.consumer);
+        _createJob(request.nonce, jobID, request.programID, request.maxCycles, request.consumer, request.programInput);
 
         // Decode the result using abi.decode
         OffChainResultWithMetadata memory result = decodeOffchainResultWithMetadata(offchainResultWithMetadata);

@@ -123,7 +123,7 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
 import "./utils/EmptyContract.sol";
 
 // To deploy and verify:
-// forge script Deployer.s.sol:Deployer --sig "deployContracts(address relayer, address coprocessorOperator, address offchainRequestSigner)" $RELAYER $COPROCESSOR_OPERATOR $OFFCHAIN_REQUEST_SIGNER --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --broadcast -v
+// forge script Deployer.s.sol:Deployer --sig "deployContracts(address relayer, address coprocessorOperator, address offchainRequestSigner, uint64 initialMaxNonce)" $RELAYER $COPROCESSOR_OPERATOR $OFFCHAIN_REQUEST_SIGNER $INITIAL_MAX_NONCE --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain-id $CHAIN_ID --broadcast -v
 contract Deployer is Script, Utils {{
 
     ProxyAdmin public coprocessorProxyAdmin;
@@ -131,7 +131,7 @@ contract Deployer is Script, Utils {{
     IJobManager public jobManagerImplementation;
     SquareRootConsumer public consumer;
 
-    function deployContracts(address relayer, address coprocessorOperator, address offchainRequestSigner) public {{
+    function deployContracts(address relayer, address coprocessorOperator, address offchainRequestSigner, uint64 initialMaxNonce) public {{
         vm.startBroadcast();
         // deploy proxy admin for ability to upgrade proxy contracts
         coprocessorProxyAdmin = new ProxyAdmin();
@@ -152,7 +152,7 @@ contract Deployer is Script, Utils {{
             )
         );
 
-        consumer = new SquareRootConsumer(address(jobManager), offchainRequestSigner);
+        consumer = new SquareRootConsumer(address(jobManager), offchainRequestSigner, initialMaxNonce);
 
         // Set ELF paths
         {set_elf_paths_code}
