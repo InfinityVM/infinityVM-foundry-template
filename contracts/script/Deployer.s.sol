@@ -19,7 +19,7 @@ contract Deployer is Script, Utils {
     IJobManager public jobManagerImplementation;
     SquareRootConsumer public consumer;
 
-    function deployContracts(address relayer, address coprocessorOperator, address offchainRequestSigner) public {
+    function deployContracts(address relayer, address coprocessorOperator, address offchainRequestSigner, uint64 initialMaxNonce) public {
         vm.startBroadcast();
         // deploy proxy admin for ability to upgrade proxy contracts
         coprocessorProxyAdmin = new ProxyAdmin();
@@ -37,11 +37,11 @@ contract Deployer is Script, Utils {
             )
         );
 
-        consumer = new SquareRootConsumer(address(jobManager), offchainRequestSigner);
+        consumer = new SquareRootConsumer(address(jobManager), offchainRequestSigner, initialMaxNonce);
 
         // Set ELF paths
         jobManager.setElfPath(
-            bytes32(0x16c37db8a5f46f457052d122fe9ef22bc8132815192368dbb384d7d103a6efbb),
+            bytes32(0x8aacfca805b47389281afa866b1a17cf9fe5a2751594ce1c74a7fa2ad82ca16c),
             "target/riscv-guest/riscv32im-risc0-zkvm-elf/release/square-root"
         );
 
