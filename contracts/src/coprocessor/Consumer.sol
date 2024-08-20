@@ -25,6 +25,7 @@ abstract contract Consumer {
         return jobIDToProgramInput[jobID];
     }
 
+    // Returns the next nonce to be used for a job
     function getNextNonce() public view virtual returns (uint64) {
         return maxNonce + 1;
     }
@@ -33,6 +34,7 @@ abstract contract Consumer {
         jobIDToProgramInput[jobID] = programInput;
     }
 
+    // Updates the maxNonce if the latest nonce is greater than the current maxNonce
     function updateLatestNonce(uint64 nonce) public virtual onlyJobManager() {
         if (nonce > maxNonce) {
             maxNonce = nonce;

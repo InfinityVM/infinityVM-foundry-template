@@ -20,10 +20,6 @@ contract SquareRootConsumer is Consumer, OffchainRequester {
         offchainSigner = _offchainSigner;
     }
 
-    function requestSquareRoot(uint256 number) public returns (bytes32) {
-        return requestJob(ProgramID.SQUARE_ROOT_ID, abi.encode(number), DEFAULT_MAX_CYCLES);
-    }
-
     function getSquareRoot(uint256 number) public view returns (uint256) {
         return numberToSquareRoot[number];
     }
@@ -34,6 +30,10 @@ contract SquareRootConsumer is Consumer, OffchainRequester {
 
     function getOffchainSigner() external view returns (address) {
         return offchainSigner;
+    }
+
+    function requestSquareRoot(uint256 number) public returns (bytes32) {
+        return requestJob(ProgramID.SQUARE_ROOT_ID, abi.encode(number), DEFAULT_MAX_CYCLES);
     }
 
     function _receiveResult(bytes32 jobID, bytes memory result) internal override {

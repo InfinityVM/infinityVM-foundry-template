@@ -24,10 +24,10 @@ enum Command {
         /// The guest binary path
         guest_binary_path: String,
 
-        /// The hex encoded input to provide to the guest binary
+        /// The hex-encoded input to provide to the guest binary
         input: String,
 
-        /// Hex-encoded Job ID
+        /// The hex-encoded Job ID
         job_id: String,
 
         /// The maximum number of cycles to run the program for

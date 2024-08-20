@@ -63,7 +63,7 @@ contract SquareRootConsumerTest is Test, Deployer {
         // Check inputs are set correctly in consumer
         assertEq(consumer.getProgramInputsForJob(DEFAULT_JOB_ID), abi.encode(9));
 
-        // Check that nonce-related data is stored correctly in Consumer contract
+        // Check that nonce is correctly updated in Consumer contract
         assertEq(consumer.getNextNonce(), DEFAULT_NONCE + 1);
     }
 
