@@ -125,7 +125,7 @@ Feel free to reach out to our team if you have any questions, we're happy to hel
 
 Each job request for an app contract must have a unique `nonce` submitted with it, to prevent replay attacks. The `Consumer.sol` contract contains a `getNextNonce()` function to return the next nonce to be used by job requests from the contracts and offchain users, and an `updateLatestNonce()` function to update the latest nonce value once a job has been submitted. 
 
-We have provided a default implementation for `getNextNonce()` and `updateLatestNonce()` in `Consumer.sol` to implement a simple nonce which increases by 1 every time a job is requested. This should be good enough for most apps, but you can override it in your consumer contract if you'd like.
+We have provided a default implementation for `getNextNonce()` and `updateLatestNonce()` in `Consumer.sol` to implement a simple nonce which increases by 1 every time a job is requested. This should be good enough for most apps, but you can override it in your consumer contract if you'd like. For example, you could use the unix timestamp in milliseconds as the nonce for offchain calls to the coprocessor.
 
 ### Development
 
