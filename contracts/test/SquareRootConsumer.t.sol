@@ -64,7 +64,7 @@ contract SquareRootConsumerTest is Test, Deployer {
         assertEq(consumer.getProgramInputsForJob(DEFAULT_JOB_ID), abi.encode(9));
 
         // Check that nonce-related data is stored correctly in Consumer contract
-        assertEq(consumer.getNextNonce(), 2);
+        assertEq(consumer.getNextNonce(), DEFAULT_NONCE + 1);
     }
 
     function testRevertWhen_Consumer_ReceiveResultUnauthorized() public {

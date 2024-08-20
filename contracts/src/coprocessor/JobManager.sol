@@ -114,7 +114,7 @@ contract JobManager is
     function cancelJob(bytes32 jobID) external override {
         JobMetadata memory job = jobIDToMetadata[jobID];
         // We allow the JobManager owner to also cancel jobs so Ethos admin can veto any jobs
-        require(msg.sender == job.caller || msg.sender == owner(), "JobManager.cancelJob: caller is not the job creator or JobManager owner");
+        require(msg.sender == job.consumer || msg.sender == owner(), "JobManager.cancelJob: caller is not the job creator or JobManager owner");
 
         require(job.status == JOB_STATE_PENDING, "JobManager.cancelJob: job is not in pending state");
         job.status = JOB_STATE_CANCELLED;
@@ -138,7 +138,7 @@ contract JobManager is
     }
 
     function submitResultForOffchainJob(
-        bytes memory offchainResultWithMetadata,
+        bytes memory resultWithMetadata,
         bytes memory signatureOnResult,
         bytes memory jobRequest,
         bytes memory signatureOnRequest
@@ -153,14 +153,14 @@ contract JobManager is
         require(OffchainRequester(request.consumer).isValidSignature(requestHash, signatureOnRequest) == EIP1271_MAGIC_VALUE, "JobManager.submitResultForOffchainJob: Invalid signature on job request");
 
         // Verify signature on result with metadata
-        bytes32 resultHash = ECDSA.toEthSignedMessageHash(offchainResultWithMetadata);
+        bytes32 resultHash = ECDSA.toEthSignedMessageHash(resultWithMetadata);
         require(ECDSA.tryRecover(resultHash, signatureOnResult) == coprocessorOperator, "JobManager.submitResultForOffchainJob: Invalid signature on result");
 
         // Create a job and set program inputs on consumer
         _createJob(request.nonce, jobID, request.programID, request.maxCycles, request.consumer, request.programInput);
 
         // Decode the result using abi.decode
-        OffChainResultWithMetadata memory result = decodeOffchainResultWithMetadata(offchainResultWithMetadata);
+        ResultWithMetadata memory result = decodeResultWithMetadata(resultWithMetadata);
         _submitResult(jobID, result.maxCycles, result.programInputHash, result.programID, result.result);
     }
 
@@ -175,7 +175,7 @@ contract JobManager is
         require(job.status == JOB_STATE_PENDING, "JobManager.submitResult: job is not in pending state");
 
         // This prevents the coprocessor from using arbitrary inputs to produce a malicious result
-        require(keccak256(Consumer(job.caller).getProgramInputsForJob(jobID)) == programInputHash, 
+        require(keccak256(Consumer(job.consumer).getProgramInputsForJob(jobID)) == programInputHash, 
             "JobManager.submitResult: program input signed by coprocessor doesn't match program input submitted with job");
         
         // This is to prevent coprocessor from using a different program ID to produce a malicious result
@@ -190,7 +190,7 @@ contract JobManager is
         emit JobCompleted(jobID, result);
 
         // Forward result to consumer
-        Consumer(job.caller).receiveResult(jobID, result);
+        Consumer(job.consumer).receiveResult(jobID, result);
     }
 
     function execute(string memory elfPath, bytes memory input, bytes32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
@@ -235,11 +235,6 @@ contract JobManager is
     function decodeResultWithMetadata(bytes memory resultWithMetadata) public pure returns (ResultWithMetadata memory) {
         (bytes32 jobID, bytes32 programInputHash, uint64 maxCycles, bytes32 programID, bytes memory result) = abi.decode(resultWithMetadata, (bytes32, bytes32, uint64, bytes32, bytes));
         return ResultWithMetadata(jobID, programInputHash, maxCycles, programID, result);
-    }
-
-    function decodeOffchainResultWithMetadata(bytes memory offChainResultWithMetadata) public pure returns (OffChainResultWithMetadata memory) {
-        (bytes32 programInputHash, uint64 maxCycles, bytes32 programID, bytes memory result) = abi.decode(offChainResultWithMetadata, (bytes32, uint64, bytes32, bytes));
-        return OffChainResultWithMetadata(programInputHash, maxCycles, programID, result);
     }
 
     function decodeJobRequest(bytes memory jobRequest) public pure returns (OffchainJobRequest memory) {

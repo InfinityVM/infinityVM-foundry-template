@@ -16,19 +16,12 @@ interface IJobManager {
     struct JobMetadata {
         bytes32 programID;
         uint64 maxCycles;
-        address caller;
+        address consumer;
         uint8 status;
     }
 
     struct ResultWithMetadata {
         bytes32 jobID;
-        bytes32 programInputHash;
-        uint64 maxCycles;
-        bytes32 programID;
-        bytes result;
-    }
-
-    struct OffChainResultWithMetadata {
         bytes32 programInputHash;
         uint64 maxCycles;
         bytes32 programID;
