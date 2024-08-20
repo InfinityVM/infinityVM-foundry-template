@@ -63,7 +63,8 @@ pub async fn main() -> Result<()> {
 
     match Command::parse() {
         Command::Execute { guest_binary_path, input, job_id, max_cycles } => {
-            let job_id_decoded: [u8; 32] = hex::decode(job_id.strip_prefix("0x").unwrap_or(&job_id))?.try_into().unwrap();
+            let job_id_decoded: [u8; 32] =
+                hex::decode(job_id.strip_prefix("0x").unwrap_or(&job_id))?.try_into().unwrap();
             execute_ffi(
                 guest_binary_path,
                 hex::decode(input.strip_prefix("0x").unwrap_or(&input))?,
