@@ -2,6 +2,19 @@ Infinity CLOB PoC
 
 ## Dev TODO:
 
+Maanav/Zeke:
+
+node side:
+- new zkvm program to return balance diffs
+- only accept orderbook as input to zkvm
+- batcher service
+    - every second send job request
+- contract
+    - accept deposit
+        - free/free
+    - receive job results
+        - apply balance diffs
+
 Functional PoC:
 
 - [x] state persistence/DB impl (zeke)
