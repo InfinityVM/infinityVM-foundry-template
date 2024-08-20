@@ -95,7 +95,7 @@ We can also call the `square-root.rs` program offchain by sending a request dire
 
 ![Offchain request flow](images/offchain-request.png)
 
-The offchain request to the coprocessor can be sent by an app, a user, or any authorized third-party. To support offchain requests for your app contract, you need to implement the `isValidSignature()` function in your contract, which is called to verify whether an offchain request is signed by an authorized signer/user. We've provided an example implementation of `isValidSignature()` in the `SquareRootConsumer.sol` contract (which checks that each job request is signed by a signer owned by the app), but you can implement any logic or checks you'd like. Each offchain job request for a given app contract must have a unique `nonce` submitted with it, to prevent replay attacks.
+The offchain request to the coprocessor can be sent by an app, a user, or any authorized third-party. To support offchain requests for your app contract, you need to implement the `isValidSignature()` function in your contract, which is called to verify whether an offchain request is signed by an authorized signer/user. We've provided an example implementation of `isValidSignature()` in the `SquareRootConsumer.sol` contract (which checks that each job request is signed by a signer owned by the app), but you can implement any logic or checks you'd like.
 
 To test this flow, you can call `requestOffchainJob()` in the tests. More instructions on how to write tests are in the `Write tests for your app` section below.
 
@@ -120,6 +120,12 @@ cargo test
 You can add `println!` statements to your Rust program to help while debugging.
 
 Feel free to reach out to our team if you have any questions, we're happy to help!
+
+### Note: Nonces
+
+Each job request for an app contract must have a unique `nonce` submitted with it, to prevent replay attacks. The `Consumer.sol` contract contains a `getNextNonce()` function to return the next nonce to be used by job requests from the contracts and offchain users, and an `updateLatestNonce()` function to update the latest nonce value once a job has been submitted. 
+
+We have provided a default implementation for `getNextNonce()` and `updateLatestNonce()` in `Consumer.sol` to implement a simple nonce which increases by 1 every time a job is requested. This should be good enough for most apps, but you can override it in your consumer contract if you'd like. For example, you could use the unix timestamp in milliseconds as the nonce for offchain calls to the coprocessor.
 
 ### Development
 

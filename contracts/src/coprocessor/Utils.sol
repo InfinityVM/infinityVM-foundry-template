@@ -35,4 +35,20 @@ library Utils {
         }
         return string(hex_buffer);
     }
+
+    /// @dev converts bytes32 to its ASCII hex string representation
+    function toHexString(bytes32 input) public pure returns (string memory) {
+        bytes16 symbols = "0123456789abcdef";
+        bytes memory hex_buffer = new bytes(2 * input.length + 2); // length of bytes32 is always 32
+        hex_buffer[0] = "0";
+        hex_buffer[1] = "x";
+
+        uint256 pos = 2;
+        for (uint256 i = 0; i < 32; ++i) {
+            uint256 _byte = uint8(input[i]);
+            hex_buffer[pos++] = symbols[_byte >> 4];
+            hex_buffer[pos++] = symbols[_byte & 0xf];
+        }
+        return string(hex_buffer);
+    }
 }
