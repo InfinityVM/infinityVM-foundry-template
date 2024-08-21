@@ -68,11 +68,17 @@ impl ClobState {
 
 /// Deposit user funds that can be used to place orders.
 pub fn deposit(req: DepositRequest, mut state: ClobState) -> (DepositResponse, ClobState) {
-    let base_balance = state.base_balances.entry(req.address).or_default();
-    base_balance.free += req.base_free;
+    state
+        .base_balances
+        .entry(req.address)
+        .and_modify(|b| b.free += req.base_free)
+        .or_insert(AssetBalance { free: req.base_free, locked: 0 });
 
-    let quote_balance = state.base_balances.entry(req.address).or_default();
-    quote_balance.free += req.quote_free;
+    state
+        .quote_balances
+        .entry(req.address)
+        .and_modify(|b| b.free += req.quote_free)
+        .or_insert(AssetBalance { free: req.quote_free, locked: 0 });
 
     (DepositResponse { success: true }, state)
 }
@@ -120,10 +126,15 @@ pub fn cancel_order(
 /// Add an order.
 pub fn add_order(req: AddOrderRequest, mut state: ClobState) -> (AddOrderResponse, ClobState) {
     let o = req.to_order(state.oid);
+
     state.oid += 1;
 
-    let base_balance = state.base_balances.get(&o.address).unwrap();
-    let quote_balance = state.quote_balances.get(&o.address).unwrap();
+    let base_balance =
+        state.base_balances.get(&o.address).expect("todo: depositing ensures quote balance exists");
+    let quote_balance = state
+        .quote_balances
+        .get(&o.address)
+        .expect("todo: depositing ensures quote balance exists");
 
     let o = req.to_order(state.oid);
     let order_id = o.oid;

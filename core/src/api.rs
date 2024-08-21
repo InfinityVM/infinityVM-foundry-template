@@ -165,7 +165,7 @@ pub struct UserBalance {
 
 /// All balances for a user.
 #[derive(
-    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+    Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
 )]
 #[serde(rename_all = "camelCase")]
 pub struct AssetBalance {
