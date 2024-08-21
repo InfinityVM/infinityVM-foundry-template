@@ -38,6 +38,7 @@ pub struct ClobState {
     oid: u64,
     balances: HashMap<[u8; 20], UserBalance>,
     base_balances: HashMap<[u8; 20], AssetBalance>,
+    quote_balances: HashMap<[u8; 20], AssetBalance>,
     book: OrderBook,
     // TODO: ensure we are wiping order status for filled orders
     order_status: HashMap<u64, FillStatus>,
@@ -92,10 +93,14 @@ pub fn cancel_order(
         Err(_) => return (CancelOrderResponse { success: false, fill_status: None }, state),
     };
 
-    let base_balance = state.base_balances.get_mut(&order.address).expect("todo");
     if order.is_buy {
         // TODO(now): when we add quote, make sure to credit free quote
+        let quote_balances = state.quote_balances.get_mut(&order.address).expect("todo");
+        let quote_size = order.quote_size();
+        quote_balances.free += quote_size;
+        quote_balances.locked -= quote_size;
     } else {
+        let base_balance = state.base_balances.get_mut(&order.address).expect("todo");
         base_balance.free += order.size;
         base_balance.locked -= order.size
     };

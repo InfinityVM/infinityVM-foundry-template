@@ -200,6 +200,11 @@ impl Order {
         // TODO(now): refactor to accept address when creating order
         Self { is_buy, limit_price, size, oid, address: [0; 20] }
     }
+
+    /// Size of the quote asset required to fill this order.
+    pub fn quote_size(&self) -> u64 {
+        self.size * self.limit_price
+    }
 }
 
 /// That current status of how filled an order is.
