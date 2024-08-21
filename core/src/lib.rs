@@ -127,9 +127,8 @@ pub fn add_order(req: AddOrderRequest, mut state: ClobState) -> (AddOrderRespons
     let o = req.to_order(state.oid);
     state.oid += 1;
 
-    let balance = state.balances.get_mut(&o.address).unwrap();
-    let base_balance = state.base_balances.get_mut(&o.address).unwrap();
-    let quote_balance = state.quote_balances.get_mut(&o.address).unwrap();
+    let base_balance = state.base_balances.get(&o.address).unwrap();
+    let quote_balance = state.quote_balances.get(&o.address).unwrap();
 
     let o = req.to_order(state.oid);
     let order_id = o.oid;
@@ -143,26 +142,33 @@ pub fn add_order(req: AddOrderRequest, mut state: ClobState) -> (AddOrderRespons
 
     let (remaining_amount, fills) = state.book.limit(o);
 
-    let fill_size = req.size - remaining_amount;
-    if req.is_buy {
-        balance.b -= req.size;
-        balance.a += fill_size;
-    } else {
-        balance.a -= req.size;
-        balance.b += fill_size;
-    }
-
     for fill in fills.iter().cloned() {
-        let maker_order_status = state.order_status.get_mut(&fill.maker_oid).unwrap();
+        let maker_order_status = state
+            .order_status
+            .get_mut(&fill.maker_oid)
+            .expect("fill status is created when order is added");
         maker_order_status.filled_size += fill.size;
+
         if req.is_buy {
-            state.balances.get_mut(&maker_order_status.address).expect("todo").b += fill.size;
+            // Seller exchanges base for quote
+            state.base_balances.entry(fill.seller).and_modify(|b| b.locked -= fill.size);
+            state.quote_balances.entry(fill.seller).and_modify(|b| b.free += fill.quote_size());
+
+            // Buyer exchanges quote for base
+            state.base_balances.entry(req.address).and_modify(|b| b.free += fill.size);
+            state.quote_balances.entry(req.address).and_modify(|b| b.locked -= fill.quote_size());
         } else {
-            state.balances.get_mut(&maker_order_status.address).expect("todo").a += fill.size;
+            state.base_balances.entry(req.address).and_modify(|b| b.locked -= fill.size);
+            state.quote_balances.entry(req.address).and_modify(|b| b.free += fill.quote_size());
+
+            // Buyer exchanges quote for base
+            state.base_balances.entry(fill.buyer).and_modify(|b| b.free += fill.size);
+            state.quote_balances.entry(fill.buyer).and_modify(|b| b.locked -= fill.quote_size());
         }
         maker_order_status.fills.push(fill);
     }
 
+    let fill_size = req.size - remaining_amount;
     let fill_status = FillStatus {
         oid: order_id,
         size: req.size,

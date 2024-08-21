@@ -246,6 +246,5 @@ mod tests {
         assert_eq!(fills[0].maker_oid, 1);
         assert_eq!(fills[0].taker_oid, 3);
         assert_eq!(fills[0].size, 10);
-        
     }
 }
