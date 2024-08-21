@@ -124,18 +124,24 @@ pub fn cancel_order(
 
 /// Add an order.
 pub fn add_order(req: AddOrderRequest, mut state: ClobState) -> (AddOrderResponse, ClobState) {
-    let addr = req.address;
-    let balance = state.balances.get_mut(&addr).unwrap();
+    let o = req.to_order(state.oid);
+    state.oid += 1;
 
-    if (req.is_buy && balance.b < req.size) || (!req.is_buy && balance.a < req.size) {
+    let balance = state.balances.get_mut(&o.address).unwrap();
+    let base_balance = state.base_balances.get_mut(&o.address).unwrap();
+    let quote_balance = state.quote_balances.get_mut(&o.address).unwrap();
+
+    let o = req.to_order(state.oid);
+    let order_id = o.oid;
+    state.oid += 1;
+
+    let is_invalid_buy = o.is_buy && quote_balance.free < o.quote_size();
+    let is_invalid_sell = !o.is_buy && base_balance.free < o.size;
+    if is_invalid_buy || is_invalid_sell {
         return (AddOrderResponse { success: false, status: None }, state);
     };
 
-    let order = req.to_order(state.oid);
-    let order_id = order.oid;
-    state.oid += 1;
-
-    let (remaining_amount, fills) = state.book.limit(order);
+    let (remaining_amount, fills) = state.book.limit(o);
 
     let fill_size = req.size - remaining_amount;
     if req.is_buy {
