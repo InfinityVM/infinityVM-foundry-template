@@ -125,15 +125,13 @@ pub fn cancel_order(
 
 /// Add an order.
 pub fn add_order(req: AddOrderRequest, mut state: ClobState) -> (AddOrderResponse, ClobState) {
-    let o = req.to_order(state.oid);
-
-    state.oid += 1;
-
-    let base_balance =
-        state.base_balances.get(&o.address).expect("todo: depositing ensures quote balance exists");
+    let base_balance = state
+        .base_balances
+        .get(&req.address)
+        .expect("todo: depositing ensures base balance exists");
     let quote_balance = state
         .quote_balances
-        .get(&o.address)
+        .get(&req.address)
         .expect("todo: depositing ensures quote balance exists");
 
     let o = req.to_order(state.oid);
