@@ -153,6 +153,24 @@ pub struct UserBalance {
     // TODO: do we need a third for funds that are not in limit orders
 }
 
+/// All balances for a user.
+#[derive(
+    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
+)]
+#[serde(rename_all = "camelCase")]
+pub struct AssetBalance {
+    /// Funds that are in the CLOB state, but not committed to orders.
+    ///
+    /// These funds can either be `lock`ed by a limit order or exit clob state
+    /// by being moved to withdraw.
+    /// 
+    /// To increase `free` funds, either some order needs to be filled or the 
+    /// user deposits into the clob.
+    pub free: u64,
+    /// Funds that are locked in orders. These funds can be
+    pub locked: u64,
+}
+
 /// A limit order.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, BorshDeserialize, BorshSerialize)]
 #[serde(rename_all = "camelCase")]
