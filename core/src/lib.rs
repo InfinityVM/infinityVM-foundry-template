@@ -65,7 +65,7 @@ impl ClobState {
 /// Deposit user funds that can be used to place orders.
 pub fn deposit(req: DepositRequest, mut state: ClobState) -> (DepositResponse, ClobState) {
     // TODO, handle case of address already existing
-    state.balances.insert(req.address, req.amounts);
+    state.balances2.insert(req.address, req.base);
 
     (DepositResponse { success: true }, state)
 }
@@ -73,12 +73,11 @@ pub fn deposit(req: DepositRequest, mut state: ClobState) -> (DepositResponse, C
 /// Withdraw non-locked funds
 pub fn withdraw(req: WithdrawRequest, mut state: ClobState) -> (WithdrawResponse, ClobState) {
     let addr = req.address;
-    let balance = state.balances.get_mut(&addr).expect("TODO");
-    if balance.a < req.amounts.a || balance.b < req.amounts.b {
+    let base_balance = state.balances2.get_mut(&addr).expect("TODO");
+    if base_balance.free < req.base_free {
         (WithdrawResponse { success: false }, state)
     } else {
-        balance.a -= req.amounts.a;
-        balance.b -= req.amounts.b;
+        base_balance.free -= req.base_free;
         (WithdrawResponse { success: true }, state)
     }
 }

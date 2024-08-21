@@ -104,8 +104,8 @@ pub struct CancelOrderResponse {
 pub struct DepositRequest {
     /// Account to credit funds to.
     pub address: [u8; 20],
-    /// Amounts to credit.
-    pub amounts: UserBalance,
+    /// Amount of base asset to credit.
+    pub base: AssetBalance,
 }
 
 /// Response to [`DepositRequest`]
@@ -126,8 +126,8 @@ pub struct DepositResponse {
 pub struct WithdrawRequest {
     /// Account to debit funds from
     pub address: [u8; 20],
-    /// Amounts to debit.
-    pub amounts: UserBalance,
+    /// Amount to withdraw from base asset free balance
+    pub base_free: u64,
 }
 
 /// Response to [`WithdrawRequest`].
@@ -163,8 +163,8 @@ pub struct AssetBalance {
     ///
     /// These funds can either be `lock`ed by a limit order or exit clob state
     /// by being moved to withdraw.
-    /// 
-    /// To increase `free` funds, either some order needs to be filled or the 
+    ///
+    /// To increase `free` funds, either some order needs to be filled or the
     /// user deposits into the clob.
     pub free: u64,
     /// Funds that are locked in orders. These funds can be
@@ -177,7 +177,7 @@ pub struct AssetBalance {
 pub struct Order {
     /// If the order is buy or sell.
     pub is_buy: bool,
-    /// The price to execute the o
+    /// The price to execute the order at.
     pub limit_price: u64,
     /// Size of the asset to exchange.
     pub size: u64,
