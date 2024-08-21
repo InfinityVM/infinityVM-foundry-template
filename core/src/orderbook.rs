@@ -23,22 +23,42 @@ pub struct OrderBook {
     pub oid_to_level: HashMap<u64, u64>,
 }
 
-fn fill_at_price_level(level: &mut Vec<Order>, taker_oid: u64, size: u64) -> (u64, Vec<OrderFill>) {
+fn fill_at_price_level(
+    level: &mut Vec<Order>,
+    taker_oid: u64,
+    size: u64,
+    is_buy: bool,
+    taker_address: [u8; 20],
+) -> (u64, Vec<OrderFill>) {
     let mut complete_fills = 0;
     let mut remaining_amount = size;
     let mut fills = vec![];
-    for order in level.iter_mut() {
-        if order.size <= remaining_amount {
+
+    for maker in level.iter_mut() {
+        let mut fill = OrderFill { maker_oid: maker.oid, taker_oid, ..Default::default() };
+        if is_buy {
+            fill.buyer = taker_address;
+            fill.seller = maker.address
+        } else {
+            fill.buyer = maker.address;
+            fill.seller = taker_address;
+        }
+
+        if maker.size <= remaining_amount {
             complete_fills += 1;
-            remaining_amount -= order.size;
-            fills.push(OrderFill::new(order.oid, taker_oid, order.size));
+            remaining_amount -= maker.size;
+            fill.size = maker.size;
+            fill.price = maker.limit_price;
+            fills.push(fill);
             if remaining_amount == 0 {
                 break;
             }
         } else {
-            order.size -= remaining_amount;
+            maker.size -= remaining_amount;
+            fill.size = remaining_amount;
             remaining_amount = 0;
-            fills.push(OrderFill::new(order.oid, taker_oid, remaining_amount));
+            fill.price = maker.limit_price;
+            fills.push(fill);
             break;
         }
     }
@@ -87,8 +107,13 @@ impl OrderBook {
             if order.limit_price >= ask_min {
                 while remaining_amount > 0 && order.limit_price >= ask_min {
                     let level = self.asks.get_mut(&ask_min).unwrap();
-                    let (new_remaining_amount, new_fills) =
-                        fill_at_price_level(level, order.oid, remaining_amount);
+                    let (new_remaining_amount, new_fills) = fill_at_price_level(
+                        level,
+                        order.oid,
+                        remaining_amount,
+                        order.is_buy,
+                        order.address,
+                    );
                     remaining_amount = new_remaining_amount;
                     fills.extend(new_fills);
                     if level.is_empty() {
@@ -102,8 +127,13 @@ impl OrderBook {
         } else if order.limit_price <= bid_max {
             while remaining_amount > 0 && order.limit_price <= bid_max {
                 let level = self.bids.get_mut(&bid_max).unwrap();
-                let (new_remaining_amount, new_fills) =
-                    fill_at_price_level(level, order.oid, remaining_amount);
+                let (new_remaining_amount, new_fills) = fill_at_price_level(
+                    level,
+                    order.oid,
+                    remaining_amount,
+                    order.is_buy,
+                    order.address,
+                );
                 remaining_amount = new_remaining_amount;
                 fills.extend(new_fills);
                 if level.is_empty() {
@@ -210,11 +240,12 @@ mod tests {
     #[test]
     fn test_fill_at_price_level() {
         let mut level = vec![Order::new(true, 10, 10, 1), Order::new(true, 10, 10, 2)];
-        let (remaining_amount, fills) = fill_at_price_level(&mut level, 3, 10);
+        let (remaining_amount, fills) = fill_at_price_level(&mut level, 3, 10, true, [0; 20]);
         assert_eq!(remaining_amount, 0);
         assert_eq!(fills.len(), 1);
         assert_eq!(fills[0].maker_oid, 1);
         assert_eq!(fills[0].taker_oid, 3);
         assert_eq!(fills[0].size, 10);
+        
     }
 }

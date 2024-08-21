@@ -228,20 +228,40 @@ pub struct FillStatus {
 }
 
 /// A match of two orders.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, BorshDeserialize, BorshSerialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderFill {
     /// Maker order ID.
     pub maker_oid: u64,
     /// Taker order ID.
     pub taker_oid: u64,
-    /// Size the match.
+    /// Size of the base asset exchanged.
     pub size: u64,
+    /// Price of the base asset in terms of quote asset.
+    pub price: u64,
+    /// Address of buyer
+    pub buyer: [u8; 20],
+    /// Address of the seller
+    pub seller: [u8; 20],
 }
 
 impl OrderFill {
     /// Create a new [Self].
-    pub const fn new(maker_oid: u64, taker_oid: u64, size: u64) -> Self {
-        Self { maker_oid, taker_oid, size }
+    pub const fn new(
+        maker_oid: u64,
+        taker_oid: u64,
+        size: u64,
+        price: u64,
+        buyer: [u8; 20],
+        seller: [u8; 20],
+    ) -> Self {
+        Self { maker_oid, taker_oid, size, price, buyer, seller }
+    }
+
+    /// Size of the quote asset exchanged
+    pub fn quote_size(&self) -> u64 {
+        self.size * self.price
     }
 }
