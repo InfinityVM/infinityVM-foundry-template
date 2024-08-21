@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 
+use crate::api::AssetBalance;
 use api::{
     AddOrderRequest, AddOrderResponse, CancelOrderRequest, CancelOrderResponse, DepositRequest,
     DepositResponse, Request, Response, UserBalance, WithdrawRequest, WithdrawResponse,
@@ -36,6 +37,7 @@ pub type StfOutput = (Response, ClobState);
 pub struct ClobState {
     oid: u64,
     balances: HashMap<[u8; 20], UserBalance>,
+    balances2: HashMap<[u8; 20], AssetBalance>,
     book: OrderBook,
     // TODO: ensure we are wiping order status for filled orders
     order_status: HashMap<u64, FillStatus>,
