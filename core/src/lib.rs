@@ -53,6 +53,14 @@ impl ClobState {
     pub fn balances(&self) -> &HashMap<[u8; 20], UserBalance> {
         &self.balances
     }
+    /// Get the base asset balances.
+    pub fn base_balances(&self) -> &HashMap<[u8; 20], AssetBalance> {
+        &self.base_balances
+    }
+    /// Get the base asset balances.
+    pub fn quote_balances(&self) -> &HashMap<[u8; 20], AssetBalance> {
+        &self.quote_balances
+    }
     /// Get the book
     pub fn book(&self) -> &OrderBook {
         &self.book
@@ -65,8 +73,11 @@ impl ClobState {
 
 /// Deposit user funds that can be used to place orders.
 pub fn deposit(req: DepositRequest, mut state: ClobState) -> (DepositResponse, ClobState) {
-    // TODO, handle case of address already existing
-    state.base_balances.insert(req.address, req.base);
+    let base_balance = state.base_balances.entry(req.address).or_default();
+    base_balance.free += req.base_free;
+
+    let quote_balance = state.base_balances.entry(req.address).or_default();
+    quote_balance.free += req.quote_free;
 
     (DepositResponse { success: true }, state)
 }
@@ -75,10 +86,12 @@ pub fn deposit(req: DepositRequest, mut state: ClobState) -> (DepositResponse, C
 pub fn withdraw(req: WithdrawRequest, mut state: ClobState) -> (WithdrawResponse, ClobState) {
     let addr = req.address;
     let base_balance = state.base_balances.get_mut(&addr).expect("TODO");
-    if base_balance.free < req.base_free {
+    let quote_balance = state.quote_balances.get_mut(&addr).expect("TODO");
+    if base_balance.free < req.base_free || quote_balance.free < req.quote_free {
         (WithdrawResponse { success: false }, state)
     } else {
         base_balance.free -= req.base_free;
+        quote_balance.free -= req.quote_free;
         (WithdrawResponse { success: true }, state)
     }
 }

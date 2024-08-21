@@ -111,7 +111,9 @@ pub struct DepositRequest {
     /// Account to credit funds to.
     pub address: [u8; 20],
     /// Amount of base asset to credit.
-    pub base: AssetBalance,
+    pub base_free: u64,
+    /// Amount of quote asset to credit.
+    pub quote_free: u64,
 }
 
 /// Response to [`DepositRequest`]
@@ -134,6 +136,8 @@ pub struct WithdrawRequest {
     pub address: [u8; 20],
     /// Amount to withdraw from base asset free balance
     pub base_free: u64,
+    /// Amount to withdraw from quote asset free balance
+    pub quote_free: u64,
 }
 
 /// Response to [`WithdrawRequest`].

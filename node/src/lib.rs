@@ -164,7 +164,7 @@ mod tests {
         body::Body,
         http::{self, Request as AxumRequest},
     };
-    use clob_core::api::UserBalance;
+    use clob_core::api::AssetBalance;
     use http_body_util::BodyExt;
     use tempfile::tempdir;
     use tower::{Service, ServiceExt};
@@ -290,7 +290,7 @@ mod tests {
         let r: ApiResponse = post(
             &mut app,
             DEPOSIT,
-            DepositRequest { address: user1, amounts: UserBalance { a: 0, b: 10 } },
+            DepositRequest { address: user1, quote_free: 10, base_free: 0 },
         )
         .await;
         assert_eq!(r.global_index, 1);
@@ -298,7 +298,7 @@ mod tests {
         let r: ApiResponse = post(
             &mut app,
             DEPOSIT,
-            DepositRequest { address: user2, amounts: UserBalance { a: 0, b: 20 } },
+            DepositRequest { address: user2, quote_free: 20, base_free: 0 },
         )
         .await;
         assert_eq!(r.global_index, 2);
@@ -306,15 +306,24 @@ mod tests {
         let r: ApiResponse = post(
             &mut app,
             DEPOSIT,
-            DepositRequest { address: user3, amounts: UserBalance { a: 0, b: 30 } },
+            DepositRequest { address: user3, quote_free: 30, base_free: 0 },
         )
         .await;
         assert_eq!(r.global_index, 3);
 
         let state = get_clob_state(&mut app).await;
         assert_eq!(state.oid(), 0);
-        assert_eq!(*state.balances().get(&user1).unwrap(), UserBalance { a: 0, b: 10 });
-        assert_eq!(*state.balances().get(&user2).unwrap(), UserBalance { a: 0, b: 20 });
-        assert_eq!(*state.balances().get(&user3).unwrap(), UserBalance { a: 0, b: 30 });
+        assert_eq!(
+            *state.quote_balances().get(&user1).unwrap(),
+            AssetBalance { free: 10, locked: 0 }
+        );
+        assert_eq!(
+            *state.quote_balances().get(&user2).unwrap(),
+            AssetBalance { free: 20, locked: 0 }
+        );
+        assert_eq!(
+            *state.quote_balances().get(&user3).unwrap(),
+            AssetBalance { free: 30, locked: 0 }
+        );
     }
 }
