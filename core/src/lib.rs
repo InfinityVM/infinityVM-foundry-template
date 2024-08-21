@@ -153,6 +153,7 @@ pub fn add_order(req: AddOrderRequest, mut state: ClobState) -> (AddOrderRespons
             state.base_balances.entry(req.address).and_modify(|b| b.free += fill.size);
             state.quote_balances.entry(req.address).and_modify(|b| b.locked -= fill.quote_size());
         } else {
+            // Seller exchanges base for quote
             state.base_balances.entry(req.address).and_modify(|b| b.locked -= fill.size);
             state.quote_balances.entry(req.address).and_modify(|b| b.free += fill.quote_size());
 
