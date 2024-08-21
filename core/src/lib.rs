@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use crate::api::AssetBalance;
 use api::{
     AddOrderRequest, AddOrderResponse, CancelOrderRequest, CancelOrderResponse, DepositRequest,
-    DepositResponse, Request, Response, UserBalance, WithdrawRequest, WithdrawResponse,
+    DepositResponse, Request, Response, WithdrawRequest, WithdrawResponse,
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
@@ -36,7 +36,6 @@ pub type StfOutput = (Response, ClobState);
 )]
 pub struct ClobState {
     oid: u64,
-    balances: HashMap<[u8; 20], UserBalance>,
     base_balances: HashMap<[u8; 20], AssetBalance>,
     quote_balances: HashMap<[u8; 20], AssetBalance>,
     book: OrderBook,
@@ -48,10 +47,6 @@ impl ClobState {
     /// Get the oid.
     pub fn oid(&self) -> u64 {
         self.oid
-    }
-    /// Get the balances.
-    pub fn balances(&self) -> &HashMap<[u8; 20], UserBalance> {
-        &self.balances
     }
     /// Get the base asset balances.
     pub fn base_balances(&self) -> &HashMap<[u8; 20], AssetBalance> {
