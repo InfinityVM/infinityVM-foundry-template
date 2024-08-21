@@ -152,19 +152,6 @@ pub struct WithdrawResponse {
 
 /// All balances for a user.
 #[derive(
-    Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
-)]
-#[serde(rename_all = "camelCase")]
-pub struct UserBalance {
-    /// Users funds for selling
-    pub a: u64,
-    /// Users funds for buying
-    pub b: u64,
-    // TODO: do we need a third for funds that are not in limit orders
-}
-
-/// All balances for a user.
-#[derive(
     Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, BorshDeserialize, BorshSerialize,
 )]
 #[serde(rename_all = "camelCase")]
@@ -177,7 +164,8 @@ pub struct AssetBalance {
     /// To increase `free` funds, either some order needs to be filled or the
     /// user deposits into the clob.
     pub free: u64,
-    /// Funds that are locked in orders. These funds can be
+    /// Funds that are locked in orders. Funds can be moved to `free` by cancelling an order(s).
+    /// When an order is matched, locked funds are transferred to the counter party.
     pub locked: u64,
 }
 
@@ -193,7 +181,7 @@ pub struct Order {
     pub size: u64,
     /// Order ID.
     pub oid: u64,
-    /// User that placed the order
+    /// User that placed the order.
     pub address: [u8; 20],
 }
 
