@@ -61,7 +61,13 @@ pub struct AddOrderRequest {
 impl AddOrderRequest {
     /// Convert the order request to an [Order].
     pub const fn to_order(&self, oid: u64) -> Order {
-        Order { is_buy: self.is_buy, limit_price: self.limit_price, size: self.size, oid }
+        Order {
+            is_buy: self.is_buy,
+            limit_price: self.limit_price,
+            size: self.size,
+            oid,
+            address: self.address,
+        }
     }
 }
 
@@ -183,12 +189,16 @@ pub struct Order {
     pub size: u64,
     /// Order ID.
     pub oid: u64,
+    /// User that placed the order
+    pub address: [u8; 20],
 }
 
 impl Order {
-    /// Create a new order
+    /// Create a new order, only used as a convenience in tests.
+    #[cfg(test)]
     pub const fn new(is_buy: bool, limit_price: u64, size: u64, oid: u64) -> Self {
-        Self { is_buy, limit_price, size, oid }
+        // TODO(now): refactor to accept address when creating order
+        Self { is_buy, limit_price, size, oid, address: [0; 20] }
     }
 }
 

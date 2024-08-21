@@ -37,7 +37,7 @@ pub type StfOutput = (Response, ClobState);
 pub struct ClobState {
     oid: u64,
     balances: HashMap<[u8; 20], UserBalance>,
-    balances2: HashMap<[u8; 20], AssetBalance>,
+    base_balances: HashMap<[u8; 20], AssetBalance>,
     book: OrderBook,
     // TODO: ensure we are wiping order status for filled orders
     order_status: HashMap<u64, FillStatus>,
@@ -65,7 +65,7 @@ impl ClobState {
 /// Deposit user funds that can be used to place orders.
 pub fn deposit(req: DepositRequest, mut state: ClobState) -> (DepositResponse, ClobState) {
     // TODO, handle case of address already existing
-    state.balances2.insert(req.address, req.base);
+    state.base_balances.insert(req.address, req.base);
 
     (DepositResponse { success: true }, state)
 }
@@ -73,7 +73,7 @@ pub fn deposit(req: DepositRequest, mut state: ClobState) -> (DepositResponse, C
 /// Withdraw non-locked funds
 pub fn withdraw(req: WithdrawRequest, mut state: ClobState) -> (WithdrawResponse, ClobState) {
     let addr = req.address;
-    let base_balance = state.balances2.get_mut(&addr).expect("TODO");
+    let base_balance = state.base_balances.get_mut(&addr).expect("TODO");
     if base_balance.free < req.base_free {
         (WithdrawResponse { success: false }, state)
     } else {
@@ -87,12 +87,21 @@ pub fn cancel_order(
     req: CancelOrderRequest,
     mut state: ClobState,
 ) -> (CancelOrderResponse, ClobState) {
-    if matches!(state.book.cancel(req.oid), Ok(())) {
-        let fill_status = state.order_status.remove(&req.oid);
-        (CancelOrderResponse { success: true, fill_status }, state)
+    let order = match state.book.cancel(req.oid) {
+        Ok(o) => o,
+        Err(_) => return (CancelOrderResponse { success: false, fill_status: None }, state),
+    };
+
+    let base_balance = state.base_balances.get_mut(&order.address).expect("todo");
+    if order.is_buy {
+        // TODO(now): when we add quote, make sure to credit free quote
     } else {
-        (CancelOrderResponse { success: false, fill_status: None }, state)
-    }
+        base_balance.free += order.size;
+        base_balance.locked -= order.size
+    };
+
+    let fill_status = state.order_status.remove(&order.oid);
+    (CancelOrderResponse { success: false, fill_status }, state)
 }
 
 /// Add an order.

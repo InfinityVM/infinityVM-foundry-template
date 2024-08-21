@@ -123,19 +123,28 @@ impl OrderBook {
     }
 
     /// Cancel a limit order.
-    pub fn cancel(&mut self, oid: u64) -> Result<(), Error> {
+    pub fn cancel(&mut self, oid: u64) -> Result<Order, Error> {
         let level_price = self.oid_to_level.get(&oid).ok_or(Error::OrderDoesNotExist)?;
-        if self.bids.contains_key(level_price) {
+        let order = if self.bids.contains_key(level_price) {
             let level = self.bids.get_mut(level_price).ok_or(Error::OrderDoesNotExist)?;
-            level.retain(|order| order.oid != oid);
+            level
+                .iter()
+                .position(|o| o.oid == oid)
+                .map(|i| level.remove(i))
+                .ok_or(Error::OrderDoesNotExist)?
         } else if self.asks.contains_key(level_price) {
             let level = self.asks.get_mut(level_price).ok_or(Error::OrderDoesNotExist)?;
-            level.retain(|order| order.oid != oid);
+            level
+                .iter()
+                .position(|o| o.oid == oid)
+                .map(|i| level.remove(i))
+                .ok_or(Error::OrderDoesNotExist)?
         } else {
             return Err(Error::OrderDoesNotExist);
-        }
+        };
         self.oid_to_level.remove(&oid);
-        Ok(())
+
+        Ok(order)
     }
 }
 
