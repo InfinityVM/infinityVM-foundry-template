@@ -45,7 +45,7 @@ cargo risczero --version
 
 ### Write a Rust program to run in the coprocessor
 
-All application programs run by the coprocessor live in `programs/app/src`. For our square root application, we have a `square-root.rs` program which takes in an integer and returns the square root. This program is also a good example of how to accept inputs and return output.
+All application programs run by the coprocessor live in `programs/app/src`. For our square root application, we have a `square_root.rs` program which takes in an integer and returns the square root. This program is also a good example of how to accept inputs and return output.
 
 This is a simple example but you could write a lot more interesting and complex code in your Rust programs. One thing to note is you can't print anything to `stdout` in your Rust program (if you'd like to print something while debugging your Rust program, we've provided instructions in the `Write tests for your app` section below).
 
@@ -58,7 +58,7 @@ edition = "2021"
 
 [[bin]]
 name = "square-root"
-path = "src/square-root.rs"
+path = "src/square_root.rs"
 
 [[bin]]
 name = "multiply"
@@ -77,10 +77,10 @@ We have a contract for the square root app in `contracts/src/SquareRootConsumer.
 
 #### Making calls to the coprocessor from a contract
 
-We can call the `square-root.rs` program from our app contract. We just need to do two things:
+We can call the `square_root.rs` program from our app contract. We just need to do two things:
 
-1. Call `requestJob()` with the program ID of `square-root.rs` from `ProgramID.sol` along with ABI-encoded inputs (the number we want to calculate the square root of).
-2. Write a `_receiveResult()` function which accepts the output from the `square-root.rs` program and uses it in some application logic.
+1. Call `requestJob()` with the program ID of `square_root.rs` from `ProgramID.sol` along with ABI-encoded inputs (the number we want to calculate the square root of).
+2. Write a `_receiveResult()` function which accepts the output from the `square_root.rs` program and uses it in some application logic.
 
 ![Onchain request flow](images/onchain-request.png)
 
@@ -91,7 +91,7 @@ forge build
 
 #### Making calls to the coprocessor offchain
 
-We can also call the `square-root.rs` program offchain by sending a request directly to the coprocessor. The coprocessor will execute the job and submit the result to our app contract. The flow looks like this:
+We can also call the `square_root.rs` program offchain by sending a request directly to the coprocessor. The coprocessor will execute the job and submit the result to our app contract. The flow looks like this:
 
 ![Offchain request flow](images/offchain-request.png)
 
@@ -103,7 +103,7 @@ To test this flow, you can call `requestOffchainJob()` in the tests. More instru
 
 We have two end-to-end tests for the `SquareRootConsumer` app in `SquareRootConsumer.t.sol`:
 
-1. `test_Consumer_RequestJob()`: This test requests the square root of a number from the `SquareRootConsumer.sol` contract. It verifies that the contract calls the `square-root.rs` program and that the coprocessor submits the correct result back to the contract.
+1. `test_Consumer_RequestJob()`: This test requests the square root of a number from the `SquareRootConsumer.sol` contract. It verifies that the contract calls the `square_root.rs` program and that the coprocessor submits the correct result back to the contract.
 2. `test_Consumer_RequestOffchainJob()`: This test sends an offchain request for the square root of a number directly to the coprocessor, using `requestOffchainJob()`. It verifies that the coprocessor submits the correct result back to the `SquareRootConsumer.sol` contract.
 
 You can add any tests for your app contracts in the `SquareRootConsumer.t.sol` file.
