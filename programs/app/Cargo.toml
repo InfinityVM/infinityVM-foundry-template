@@ -5,7 +5,7 @@ edition = "2021"
 
 [[bin]]
 name = "square-root"
-path = "src/square-root.rs"
+path = "src/square_root.rs"
 
 [workspace]
 
