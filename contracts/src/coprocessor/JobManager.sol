@@ -82,29 +82,29 @@ contract JobManager is
         programIDToElfPath[programID] = elfPath;
     }
 
-    function createJob(uint64 nonce, bytes32 programID, bytes calldata programInput, uint64 maxCycles) external override returns (bytes32) {
+    function createJob(uint64 nonce, bytes32 programID, bytes calldata onchainInput, uint64 maxCycles) external override returns (bytes32) {
         address consumer = msg.sender;
         bytes32 jobID = keccak256(abi.encodePacked(nonce, consumer));
-       _createJob(nonce, jobID, programID, maxCycles, consumer, programInput);
-        emit JobCreated(jobID, maxCycles, programID, programInput);
+       _createJob(nonce, jobID, programID, maxCycles, consumer, onchainInput);
+        emit JobCreated(jobID, nonce, consumer, maxCycles, programID, onchainInput);
 
         string memory elfPath = getElfPath(programID);
         // This would normally be a separate call by relayer, but for tests we call it here
-        (bytes memory resultWithMetadata, bytes memory signature) = execute(elfPath, programInput, jobID, maxCycles);
+        (bytes memory resultWithMetadata, bytes memory signature) = execute(elfPath, onchainInput, jobID, maxCycles);
         submitResult(resultWithMetadata, signature);
 
         return jobID;
     }
 
-    function _createJob(uint64 nonce, bytes32 jobID, bytes32 programID, uint64 maxCycles, address consumer, bytes memory programInput) internal {
+    function _createJob(uint64 nonce, bytes32 jobID, bytes32 programID, uint64 maxCycles, address consumer, bytes memory onchainInput) internal {
         require(jobIDToMetadata[jobID].status == 0, "JobManager.createJob: job already exists with this nonce and consumer");
         jobIDToMetadata[jobID] = JobMetadata(programID, maxCycles, consumer, JOB_STATE_PENDING);
-        Consumer(consumer).setProgramInputsForJob(jobID, programInput);
+        Consumer(consumer).setOnchainInputForJob(jobID, onchainInput);
         Consumer(consumer).updateLatestNonce(nonce);
     }
 
-    function requestOffchainJob(bytes32 programID, bytes calldata input, uint64 maxCycles, address consumer, uint64 nonce, string calldata privateKey) public {
-        (bytes memory resultWithMetadata, bytes memory resultSignature, bytes memory jobRequest, bytes memory requestSignature) = executeOffchainJob(programID, input, maxCycles, consumer, nonce, privateKey);
+    function requestOffchainJob(OffchainJobRequest calldata request, bytes calldata offchainInput, bytes calldata state, string calldata privateKey) public {
+        (bytes memory resultWithMetadata, bytes memory resultSignature, bytes memory jobRequest, bytes memory requestSignature) = executeOffchainJob(request, privateKey);
 
         submitResultForOffchainJob(resultWithMetadata, resultSignature, jobRequest, requestSignature);
     }
@@ -132,19 +132,19 @@ contract JobManager is
         require(ECDSA.tryRecover(messageHash, signature) == coprocessorOperator, "JobManager.submitResult: Invalid signature");
 
         // Decode the resultWithMetadata using abi.decode
-        ResultWithMetadata memory result = decodeResultWithMetadata(resultWithMetadata);
+        ResultWithMetadata memory result = abi.decode(resultWithMetadata, (ResultWithMetadata));
 
-        _submitResult(result.jobID, result.maxCycles, result.programInputHash, result.programID, result.result);
+        _submitResult(result.jobID, result.maxCycles, result.onchainInputHash, result.programID, result.result);
     }
 
     function submitResultForOffchainJob(
-        bytes memory resultWithMetadata,
+        bytes memory offchainResultWithMetadata,
         bytes memory signatureOnResult,
         bytes memory jobRequest,
         bytes memory signatureOnRequest
     ) public override {
         // Decode the job request using abi.decode
-        OffchainJobRequest memory request = decodeJobRequest(jobRequest);
+        OffchainJobRequest memory request = abi.decode(jobRequest, (OffchainJobRequest));
 
         bytes32 jobID = keccak256(abi.encodePacked(request.nonce, request.consumer));
 
@@ -153,22 +153,27 @@ contract JobManager is
         require(OffchainRequester(request.consumer).isValidSignature(requestHash, signatureOnRequest) == EIP1271_MAGIC_VALUE, "JobManager.submitResultForOffchainJob: Invalid signature on job request");
 
         // Verify signature on result with metadata
-        bytes32 resultHash = ECDSA.toEthSignedMessageHash(resultWithMetadata);
+        bytes32 resultHash = ECDSA.toEthSignedMessageHash(offchainResultWithMetadata);
         require(ECDSA.tryRecover(resultHash, signatureOnResult) == coprocessorOperator, "JobManager.submitResultForOffchainJob: Invalid signature on result");
 
-        // Create a job and set program inputs on consumer
-        _createJob(request.nonce, jobID, request.programID, request.maxCycles, request.consumer, request.programInput);
+        // Create a job without emitting an event and set onchain input, offchain input hash, and state hash on consumer
+        _createJob(request.nonce, jobID, request.programID, request.maxCycles, request.consumer, request.onchainInput);
+        Consumer(request.consumer).setOnchainInputForJob(jobID, request.onchainInput);
+        Consumer(request.consumer).setOffchainInputHashForJob(jobID, request.offchainInputHash);
+        Consumer(request.consumer).setStateHashForJob(jobID, request.stateHash);
 
         // Decode the result using abi.decode
-        ResultWithMetadata memory result = decodeResultWithMetadata(resultWithMetadata);
+        OffchainResultWithMetadata memory result = abi.decode(offchainResultWithMetadata, (OffchainResultWithMetadata));
         require(jobID == result.jobID, "JobManager.submitResultForOffchainJob: job ID signed by coprocessor doesn't match job ID of job request");
-        _submitResult(jobID, result.maxCycles, result.programInputHash, result.programID, result.result);
+        require(request.offchainInputHash == result.offchainInputHash, "JobManager.submitResultForOffchainJob: offchain input hash signed by coprocessor doesn't match offchain input hash of job request");
+        require(request.stateHash == result.stateHash, "JobManager.submitResultForOffchainJob: state hash signed by coprocessor doesn't match state hash of job request");
+        _submitResult(jobID, result.maxCycles, result.onchainInputHash, result.programID, result.result);
     }
 
     function _submitResult(
         bytes32 jobID,
         uint64 maxCycles,
-        bytes32 programInputHash,
+        bytes32 onchainInputHash,
         bytes32 programID,
         bytes memory result
     ) internal {
@@ -176,8 +181,8 @@ contract JobManager is
         require(job.status == JOB_STATE_PENDING, "JobManager.submitResult: job is not in pending state");
 
         // This prevents the coprocessor from using arbitrary inputs to produce a malicious result
-        require(keccak256(Consumer(job.consumer).getProgramInputsForJob(jobID)) == programInputHash, 
-            "JobManager.submitResult: program input signed by coprocessor doesn't match program input submitted with job");
+        require(keccak256(Consumer(job.consumer).getOnchainInputForJob(jobID)) == onchainInputHash, 
+            "JobManager.submitResult: onchain input signed by coprocessor doesn't match onchain input submitted with job");
         
         // This is to prevent coprocessor from using a different program ID to produce a malicious result
         require(job.programID == programID,
@@ -212,8 +217,8 @@ contract JobManager is
         return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes));
     }
 
-    function executeOffchainJob(bytes32 programID, bytes calldata input, uint64 maxCycles, address consumer, uint64 nonce, string calldata privateKey) internal returns (bytes memory, bytes memory, bytes memory, bytes memory) {
-        string memory elfPath = getElfPath(programID);
+    function executeOffchainJob(OffchainJobRequest calldata request, string calldata privateKey) internal returns (bytes memory, bytes memory, bytes memory, bytes memory) {
+        string memory elfPath = getElfPath(request.programID);
         string[] memory imageRunnerInput = new string[](14);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
@@ -225,22 +230,11 @@ contract JobManager is
         imageRunnerInput[i++] = "-q";
         imageRunnerInput[i++] = "execute-offchain-job";
         imageRunnerInput[i++] = elfPath;
-        imageRunnerInput[i++] = input.toHexString();
-        imageRunnerInput[i++] = maxCycles.toString();
-        imageRunnerInput[i++] = consumer.toHexString();
-        imageRunnerInput[i++] = nonce.toString();
+        imageRunnerInput[i++] = request.onchainInput.toHexString();
+        imageRunnerInput[i++] = request.maxCycles.toString();
+        imageRunnerInput[i++] = request.consumer.toHexString();
+        imageRunnerInput[i++] = request.nonce.toString();
         imageRunnerInput[i++] = privateKey;
         return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes, bytes, bytes));
     }
-
-    function decodeResultWithMetadata(bytes memory resultWithMetadata) public pure returns (ResultWithMetadata memory) {
-        (bytes32 jobID, bytes32 programInputHash, uint64 maxCycles, bytes32 programID, bytes memory result) = abi.decode(resultWithMetadata, (bytes32, bytes32, uint64, bytes32, bytes));
-        return ResultWithMetadata(jobID, programInputHash, maxCycles, programID, result);
-    }
-
-    function decodeJobRequest(bytes memory jobRequest) public pure returns (OffchainJobRequest memory) {
-        (uint64 nonce, uint64 maxCycles, address consumer, bytes32 programID, bytes memory programInput) = abi.decode(jobRequest, (uint64, uint64, address, bytes32, bytes));
-        return OffchainJobRequest(nonce, maxCycles, consumer, programID, programInput);
-    }
-
 }
