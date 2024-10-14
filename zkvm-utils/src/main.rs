@@ -25,7 +25,7 @@ enum Command {
         guest_binary_path: String,
 
         /// The hex-encoded input to provide to the guest binary
-        input: String,
+        onchain_input: String,
 
         /// The hex-encoded Job ID
         job_id: String,
@@ -62,12 +62,12 @@ pub async fn main() -> Result<()> {
     let signer = create_signer(secret)?;
 
     match Command::parse() {
-        Command::Execute { guest_binary_path, input, job_id, max_cycles } => {
+        Command::Execute { guest_binary_path, onchain_input, job_id, max_cycles } => {
             let job_id_decoded: [u8; 32] =
                 hex::decode(job_id.strip_prefix("0x").unwrap_or(&job_id))?.try_into().unwrap();
             execute_ffi(
                 guest_binary_path,
-                hex::decode(input.strip_prefix("0x").unwrap_or(&input))?,
+                hex::decode(onchain_input.strip_prefix("0x").unwrap_or(&onchain_input))?,
                 job_id_decoded,
                 max_cycles,
                 &signer,
@@ -202,7 +202,7 @@ pub type OffChainResultWithSignatureCalldata = sol! {
 /// The payload that gets signed to signify that the zkvm executor has faithfully
 /// executed the job. Also the result payload the job manager contract expects.
 ///
-/// tuple(JobID,ProgramInputHash,MaxCycles,VerifyingKey,RawOutput)
+/// tuple(JobID,OnchainInputHash,MaxCycles,VerifyingKey,RawOutput)
 pub type ResultWithMetadata = sol! {
     tuple(bytes32,bytes32,uint64,bytes32,bytes)
 };
@@ -246,7 +246,7 @@ pub fn abi_encode_result_with_metadata(
     raw_output: Vec<u8>,
 ) -> Vec<u8> {
     let program_input_hash = keccak256(program_input);
-    ResultWithMetadata::abi_encode_params(&(
+    ResultWithMetadata::abi_encode(&(
         job_id,
         program_input_hash,
         max_cycles,
