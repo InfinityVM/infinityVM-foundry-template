@@ -124,7 +124,7 @@ contract JobManager is
     }
 
     function submitResult(
-        bytes memory resultWithMetadata, // Includes job ID + program input hash + max cycles + program ID + result value
+        bytes memory resultWithMetadata, // Includes job ID + onchain input hash + max cycles + program ID + result value
         bytes memory signature
     ) public override nonReentrant {
         // Verify signature on result with metadata
@@ -158,7 +158,6 @@ contract JobManager is
 
         // Create a job without emitting an event and set onchain input, offchain input hash, and state hash on consumer
         _createJob(request.nonce, jobID, request.programID, request.maxCycles, request.consumer, request.onchainInput);
-        Consumer(request.consumer).setOnchainInputForJob(jobID, request.onchainInput);
         Consumer(request.consumer).setOffchainInputHashForJob(jobID, request.offchainInputHash);
         Consumer(request.consumer).setStateHashForJob(jobID, request.stateHash);
 
@@ -217,7 +216,7 @@ contract JobManager is
         return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes));
     }
 
-    function executeOffchainJob(OffchainJobRequest calldata request, string calldata privateKey) internal returns (bytes memory, bytes memory, bytes memory, bytes memory) {
+    function executeOffchainJob(OffchainJobRequest calldata request, bytes calldata offchainInput, bytes calldata state, string calldata privateKey) internal returns (bytes memory, bytes memory, bytes memory, bytes memory) {
         string memory elfPath = getElfPath(request.programID);
         string[] memory imageRunnerInput = new string[](14);
         uint256 i = 0;
@@ -231,6 +230,8 @@ contract JobManager is
         imageRunnerInput[i++] = "execute-offchain-job";
         imageRunnerInput[i++] = elfPath;
         imageRunnerInput[i++] = request.onchainInput.toHexString();
+        imageRunnerInput[i++] = request.offchainInputHash.toHexString();
+        imageRunnerInput[i++] = request.stateHash.toHexString();
         imageRunnerInput[i++] = request.maxCycles.toString();
         imageRunnerInput[i++] = request.consumer.toHexString();
         imageRunnerInput[i++] = request.nonce.toString();
