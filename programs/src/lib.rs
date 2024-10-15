@@ -22,7 +22,8 @@ mod tests {
         // Execute program on input, without generating a ZK proof
         let env = ExecutorEnv::builder()
             .session_limit(Some(MAX_CYCLES))
-            .write(&onchain_input_len)?
+            .write(&onchain_input_len)
+            .unwrap()
             .write_slice(&onchain_input)
             .build()
             .unwrap();
