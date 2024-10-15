@@ -140,6 +140,7 @@ async fn execute_onchain_job_ffi(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 /// Prints on stdio the Ethereum ABI and hex encoded request and result
 /// for an offchain job.
 async fn execute_offchain_job_ffi(
@@ -274,7 +275,7 @@ pub type ResultWithMetadata = sol! {
 /// executed an offchain job. Also the result payload the job manager contract expects.
 ///
 /// tuple(JobID,OnchainInputHash,OffchainInputHash,OffchainStateHash,MaxCycles,VerifyingKey,
-/// RawOutput)
+/// `RawOutput`)
 pub type OffChainResultWithMetadata = sol! {
     tuple(bytes32,bytes32,bytes32,bytes32,uint64,bytes32,bytes)
 };

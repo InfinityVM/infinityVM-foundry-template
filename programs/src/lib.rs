@@ -16,11 +16,14 @@ mod tests {
     fn executes_square_root() {
         // Input for program
         let number = U256::from(9);
+        let onchain_input = number.abi_encode();
+        let onchain_input_len = onchain_input.len() as u32;
 
         // Execute program on input, without generating a ZK proof
         let env = ExecutorEnv::builder()
             .session_limit(Some(MAX_CYCLES))
-            .write_slice(&number.abi_encode())
+            .write(&onchain_input_len)?
+            .write_slice(&onchain_input)
             .build()
             .unwrap();
         let executor = LocalProver::new("locals only");
