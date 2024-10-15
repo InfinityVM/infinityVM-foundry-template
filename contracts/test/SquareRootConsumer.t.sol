@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {JobManager} from "../src/coprocessor/JobManager.sol";
+import {IJobManager} from "../src/coprocessor/IJobManager.sol";
 import {Consumer} from "../src/coprocessor/Consumer.sol";
 import {SquareRootConsumer} from "../src/SquareRootConsumer.sol";
 import {Deployer} from "../script/Deployer.s.sol";
@@ -40,12 +41,20 @@ contract SquareRootConsumerTest is Test, Deployer {
 
     function test_Consumer_RequestOffchainJob() public {
         // Request offchain job from default offchain user
-        jobManager.requestOffchainJob(
-            ProgramID.SQUARE_ROOT_ID, // Program ID
-            abi.encode(9), // Program input
+        IJobManager.OffchainJobRequest memory request = IJobManager.OffchainJobRequest(
+            DEFAULT_NONCE, // Nonce (should be unique for each offchain job request)
             DEFAULT_MAX_CYCLES, // Max cycles
             address(consumer), // Consumer address to send result to
-            DEFAULT_NONCE, // Nonce (should be unique for each offchain job request)
+            ProgramID.SQUARE_ROOT_ID, // Program ID
+            abi.encode(9), // Onchain input
+            keccak256(""), // Offchain input
+            keccak256("") // State
+        );
+
+        jobManager.requestOffchainJob(
+            request,
+            "", // Offchain input
+            "", // State
             DEFAULT_OFFCHAIN_SIGNER_PRIVATE_KEY // Private key of offchain request signer
         );
 
@@ -61,7 +70,7 @@ contract SquareRootConsumerTest is Test, Deployer {
         assertEq(consumer.getJobResult(DEFAULT_JOB_ID), abi.encode(9, 3));
 
         // Check inputs are set correctly in consumer
-        assertEq(consumer.getProgramInputsForJob(DEFAULT_JOB_ID), abi.encode(9));
+        assertEq(consumer.getOnchainInputForJob(DEFAULT_JOB_ID), abi.encode(9));
 
         // Check that nonce is correctly updated in Consumer contract
         assertEq(consumer.getNextNonce(), DEFAULT_NONCE + 1);

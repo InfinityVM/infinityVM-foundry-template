@@ -24,7 +24,7 @@ This section will take us through an example of building an app that computes an
 Clone this repo (including submodules):
 
 ```
-git clone --recursive https://github.com/Ethos-Works/infinity-foundry-template.git
+git clone --recursive https://github.com/InfinityVM/infinityVM-foundry-template.git
 ```
 
 Setup rust
