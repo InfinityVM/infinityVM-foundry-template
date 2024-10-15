@@ -20,7 +20,7 @@ type K256LocalSigner = LocalSigner<SigningKey>;
 #[clap(author, version, about, long_about = None)]
 enum Command {
     /// Execute the RISC-V ELF binary (returns the signed result)
-    Execute {
+    ExecuteOnchainJob {
         /// The guest binary path
         guest_binary_path: String,
 
@@ -68,7 +68,7 @@ pub async fn main() -> Result<()> {
     let signer = create_signer(secret)?;
 
     match Command::parse() {
-        Command::Execute { guest_binary_path, onchain_input, job_id, max_cycles } => {
+        Command::ExecuteOnchainJob { guest_binary_path, onchain_input, job_id, max_cycles } => {
             let job_id_decoded: [u8; 32] =
                 hex::decode(job_id.strip_prefix("0x").unwrap_or(&job_id))?.try_into().unwrap();
             execute_onchain_job_ffi(
@@ -193,8 +193,9 @@ async fn execute_offchain_job_ffi(
 
 /// Generates journal for the given elf and input, for an onchain job.
 fn execute_onchain_job(elf: &[u8], onchain_input: &[u8], max_cycles: u64) -> Result<Vec<u8>> {
-    // TODO (Maanav): Actually write onchain_input_len and then onchain_input etc. and modify the zkVM program to match this
-    let env = ExecutorEnv::builder().session_limit(Some(max_cycles)).write_slice(onchain_input).build()?;
+    let onchain_input_len = onchain_input.len() as u32;
+    
+    let env = ExecutorEnv::builder().session_limit(Some(max_cycles)).write(&onchain_input_len)?.write_slice(onchain_input).build()?;
 
     let prover = LocalProver::new("locals only");
     let prove_info = prover.execute(env, elf)?;
@@ -204,7 +205,19 @@ fn execute_onchain_job(elf: &[u8], onchain_input: &[u8], max_cycles: u64) -> Res
 
 /// Generates journal for the given elf and input, for an offchain job.
 fn execute_offchain_job(elf: &[u8], onchain_input: &[u8], offchain_input: &[u8], state: &[u8], max_cycles: u64) -> Result<Vec<u8>> {
-    let env = ExecutorEnv::builder().session_limit(Some(max_cycles)).write_slice(onchain_input).write_slice(offchain_input).write_slice(state).build()?;
+    let onchain_input_len = onchain_input.len() as u32;
+    let offchain_input_len = offchain_input.len() as u32;
+    let state_len = state.len() as u32;
+
+    let env = ExecutorEnv::builder()
+        .session_limit(Some(max_cycles))
+        .write(&onchain_input_len)?
+        .write_slice(onchain_input)
+        .write(&offchain_input_len)?
+        .write_slice(offchain_input)
+        .write(&state_len)?
+        .write_slice(state)
+        .build()?;
 
     let prover = LocalProver::new("locals only");
     let prove_info = prover.execute(env, elf)?;

@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {JobManager} from "../src/coprocessor/JobManager.sol";
+import {IJobManager} from "../src/coprocessor/IJobManager.sol";
 import {Consumer} from "../src/coprocessor/Consumer.sol";
 import {SquareRootConsumer} from "../src/SquareRootConsumer.sol";
 import {Deployer} from "../script/Deployer.s.sol";
@@ -38,36 +39,42 @@ contract SquareRootConsumerTest is Test, Deployer {
         assertEq(consumer.getJobResult(DEFAULT_JOB_ID), abi.encode(9, 3));
     }
 
-    // function test_Consumer_RequestOffchainJob() public {
-    //     // Request offchain job from default offchain user
-    //     jobManager.requestOffchainJob(
-    //         ProgramID.SQUARE_ROOT_ID, // Program ID
-    //         abi.encode(9), // Onchain input
-    //         abi.encode(9), // Offchain input
-    //         abi.encode(0), // State
-    //         DEFAULT_MAX_CYCLES, // Max cycles
-    //         address(consumer), // Consumer address to send result to
-    //         DEFAULT_NONCE, // Nonce (should be unique for each offchain job request)
-    //         DEFAULT_OFFCHAIN_SIGNER_PRIVATE_KEY // Private key of offchain request signer
-    //     );
+    function test_Consumer_RequestOffchainJob() public {
+        // Request offchain job from default offchain user
+        IJobManager.OffchainJobRequest memory request = IJobManager.OffchainJobRequest(
+            DEFAULT_NONCE, // Nonce (should be unique for each offchain job request)
+            DEFAULT_MAX_CYCLES, // Max cycles
+            address(consumer), // Consumer address to send result to
+            ProgramID.SQUARE_ROOT_ID, // Program ID
+            abi.encode(9), // Onchain input
+            keccak256(""), // Offchain input
+            keccak256("") // State
+        );
 
-    //     JobManager.JobMetadata memory jobMetadata = jobManager.getJobMetadata(DEFAULT_JOB_ID);
-    //     assertEq(jobMetadata.programID, ProgramID.SQUARE_ROOT_ID);
+        jobManager.requestOffchainJob(
+            request,
+            "", // Offchain input
+            "", // State
+            DEFAULT_OFFCHAIN_SIGNER_PRIVATE_KEY // Private key of offchain request signer
+        );
 
-    //     // Job status is COMPLETED since createJob in JobManager calls
-    //     // submitResult in this Foundry template
-    //     assertEq(jobMetadata.status, 3);
+        JobManager.JobMetadata memory jobMetadata = jobManager.getJobMetadata(DEFAULT_JOB_ID);
+        assertEq(jobMetadata.programID, ProgramID.SQUARE_ROOT_ID);
 
-    //     // Check that state was correctly updated in Consumer contract
-    //     assertEq(consumer.getSquareRoot(9), 3);
-    //     assertEq(consumer.getJobResult(DEFAULT_JOB_ID), abi.encode(9, 3));
+        // Job status is COMPLETED since createJob in JobManager calls
+        // submitResult in this Foundry template
+        assertEq(jobMetadata.status, 3);
 
-    //     // Check inputs are set correctly in consumer
-    //     assertEq(consumer.getOnchainInputForJob(DEFAULT_JOB_ID), abi.encode(9));
+        // Check that state was correctly updated in Consumer contract
+        assertEq(consumer.getSquareRoot(9), 3);
+        assertEq(consumer.getJobResult(DEFAULT_JOB_ID), abi.encode(9, 3));
 
-    //     // Check that nonce is correctly updated in Consumer contract
-    //     assertEq(consumer.getNextNonce(), DEFAULT_NONCE + 1);
-    // }
+        // Check inputs are set correctly in consumer
+        assertEq(consumer.getOnchainInputForJob(DEFAULT_JOB_ID), abi.encode(9));
+
+        // Check that nonce is correctly updated in Consumer contract
+        assertEq(consumer.getNextNonce(), DEFAULT_NONCE + 1);
+    }
 
     function testRevertWhen_Consumer_ReceiveResultUnauthorized() public {
         test_Consumer_RequestJob();

@@ -90,7 +90,7 @@ contract JobManager is
 
         string memory elfPath = getElfPath(programID);
         // This would normally be a separate call by relayer, but for tests we call it here
-        (bytes memory resultWithMetadata, bytes memory signature) = execute(elfPath, onchainInput, jobID, maxCycles);
+        (bytes memory resultWithMetadata, bytes memory signature) = executeOnchainJob(elfPath, onchainInput, jobID, maxCycles);(elfPath, onchainInput, jobID, maxCycles);
         submitResult(resultWithMetadata, signature);
 
         return jobID;
@@ -104,7 +104,7 @@ contract JobManager is
     }
 
     function requestOffchainJob(OffchainJobRequest calldata request, bytes calldata offchainInput, bytes calldata state, string calldata privateKey) public {
-        (bytes memory resultWithMetadata, bytes memory resultSignature, bytes memory jobRequest, bytes memory requestSignature) = executeOffchainJob(request, privateKey);
+        (bytes memory resultWithMetadata, bytes memory resultSignature, bytes memory jobRequest, bytes memory requestSignature) = executeOffchainJob(request, offchainInput, state, privateKey);
 
         submitResultForOffchainJob(resultWithMetadata, resultSignature, jobRequest, requestSignature);
     }
@@ -198,7 +198,7 @@ contract JobManager is
         Consumer(job.consumer).receiveResult(jobID, result);
     }
 
-    function execute(string memory elfPath, bytes memory input, bytes32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
+    function executeOnchainJob(string memory elfPath, bytes memory onchainInput, bytes32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
         string[] memory imageRunnerInput = new string[](12);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
@@ -208,9 +208,9 @@ contract JobManager is
         imageRunnerInput[i++] = "--bin";
         imageRunnerInput[i++] = "zkvm-utils";
         imageRunnerInput[i++] = "-q";
-        imageRunnerInput[i++] = "execute";
+        imageRunnerInput[i++] = "execute-onchain-job";
         imageRunnerInput[i++] = elfPath;
-        imageRunnerInput[i++] = input.toHexString();
+        imageRunnerInput[i++] = onchainInput.toHexString();
         imageRunnerInput[i++] = jobID.toHexString();
         imageRunnerInput[i++] = maxCycles.toString();
         return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes));
@@ -218,7 +218,7 @@ contract JobManager is
 
     function executeOffchainJob(OffchainJobRequest calldata request, bytes calldata offchainInput, bytes calldata state, string calldata privateKey) internal returns (bytes memory, bytes memory, bytes memory, bytes memory) {
         string memory elfPath = getElfPath(request.programID);
-        string[] memory imageRunnerInput = new string[](14);
+        string[] memory imageRunnerInput = new string[](16);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
         imageRunnerInput[i++] = "run";
@@ -230,8 +230,8 @@ contract JobManager is
         imageRunnerInput[i++] = "execute-offchain-job";
         imageRunnerInput[i++] = elfPath;
         imageRunnerInput[i++] = request.onchainInput.toHexString();
-        imageRunnerInput[i++] = request.offchainInputHash.toHexString();
-        imageRunnerInput[i++] = request.stateHash.toHexString();
+        imageRunnerInput[i++] = offchainInput.toHexString();
+        imageRunnerInput[i++] = state.toHexString();
         imageRunnerInput[i++] = request.maxCycles.toString();
         imageRunnerInput[i++] = request.consumer.toHexString();
         imageRunnerInput[i++] = request.nonce.toString();
