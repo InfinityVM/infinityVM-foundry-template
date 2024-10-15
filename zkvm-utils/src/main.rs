@@ -120,8 +120,13 @@ async fn execute_onchain_job_ffi(
     let program_id = compute_image_id(&elf)?;
     let program_id_bytes = program_id.as_bytes().try_into().expect("program id is 32 bytes");
     let journal = execute_onchain_job(&elf, &onchain_input, max_cycles)?;
-    let result_with_metadata =
-        abi_encode_result_with_metadata(job_id, onchain_input, max_cycles, program_id_bytes, journal);
+    let result_with_metadata = abi_encode_result_with_metadata(
+        job_id,
+        onchain_input,
+        max_cycles,
+        program_id_bytes,
+        journal,
+    );
 
     let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
 
@@ -173,8 +178,15 @@ async fn execute_offchain_job_ffi(
 
     let journal = execute_offchain_job(&elf, &onchain_input, &offchain_input, &state, max_cycles)?;
     let job_id = get_job_id(nonce, Address::from_str(&consumer).unwrap());
-    let offchain_result_with_metadata =
-        abi_encode_offchain_result_with_metadata(job_id, onchain_input_hash.into(), offchain_input_hash.into(), state_hash.into(), max_cycles, program_id_bytes, journal);
+    let offchain_result_with_metadata = abi_encode_offchain_result_with_metadata(
+        job_id,
+        onchain_input_hash.into(),
+        offchain_input_hash.into(),
+        state_hash.into(),
+        max_cycles,
+        program_id_bytes,
+        journal,
+    );
     let zkvm_operator_signature = sign_message(&offchain_result_with_metadata, signer).await?;
 
     let calldata = abi_encode_offchain_result_with_signature_calldata(
@@ -194,7 +206,7 @@ async fn execute_offchain_job_ffi(
 /// Generates journal for the given elf and input, for an onchain job.
 fn execute_onchain_job(elf: &[u8], onchain_input: &[u8], max_cycles: u64) -> Result<Vec<u8>> {
     let onchain_input_len = onchain_input.len() as u32;
-    
+
     let env = ExecutorEnv::builder()
         .session_limit(Some(max_cycles))
         .write(&onchain_input_len)?
@@ -208,7 +220,13 @@ fn execute_onchain_job(elf: &[u8], onchain_input: &[u8], max_cycles: u64) -> Res
 }
 
 /// Generates journal for the given elf and input, for an offchain job.
-fn execute_offchain_job(elf: &[u8], onchain_input: &[u8], offchain_input: &[u8], state: &[u8], max_cycles: u64) -> Result<Vec<u8>> {
+fn execute_offchain_job(
+    elf: &[u8],
+    onchain_input: &[u8],
+    offchain_input: &[u8],
+    state: &[u8],
+    max_cycles: u64,
+) -> Result<Vec<u8>> {
     let onchain_input_len = onchain_input.len() as u32;
     let offchain_input_len = offchain_input.len() as u32;
     let state_len = state.len() as u32;
@@ -255,7 +273,8 @@ pub type ResultWithMetadata = sol! {
 /// The payload that gets signed to signify that the zkvm executor has faithfully
 /// executed an offchain job. Also the result payload the job manager contract expects.
 ///
-/// tuple(JobID,OnchainInputHash,OffchainInputHash,OffchainStateHash,MaxCycles,VerifyingKey,RawOutput)
+/// tuple(JobID,OnchainInputHash,OffchainInputHash,OffchainStateHash,MaxCycles,VerifyingKey,
+/// RawOutput)
 pub type OffChainResultWithMetadata = sol! {
     tuple(bytes32,bytes32,bytes32,bytes32,uint64,bytes32,bytes)
 };
