@@ -1,5 +1,3 @@
-use std::io::Read;
-
 use alloy_primitives::U256;
 use alloy_sol_types::{sol, SolType, SolValue};
 use risc0_zkvm::guest::env;
@@ -9,7 +7,7 @@ type NumberWithSquareRoot = sol! {
 };
 
 fn main() {
-    // Read the input data for this application.
+    // This application only uses onchain input. We read the onchain input here.
     let onchain_input_len: u32 = env::read();
     let mut input_bytes = vec![0; onchain_input_len as usize];
     env::read_slice(&mut input_bytes);

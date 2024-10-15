@@ -195,7 +195,11 @@ async fn execute_offchain_job_ffi(
 fn execute_onchain_job(elf: &[u8], onchain_input: &[u8], max_cycles: u64) -> Result<Vec<u8>> {
     let onchain_input_len = onchain_input.len() as u32;
     
-    let env = ExecutorEnv::builder().session_limit(Some(max_cycles)).write(&onchain_input_len)?.write_slice(onchain_input).build()?;
+    let env = ExecutorEnv::builder()
+        .session_limit(Some(max_cycles))
+        .write(&onchain_input_len)?
+        .write_slice(onchain_input)
+        .build()?;
 
     let prover = LocalProver::new("locals only");
     let prove_info = prover.execute(env, elf)?;
