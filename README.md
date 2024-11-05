@@ -127,7 +127,7 @@ Each job request for an app contract must have a unique `nonce` submitted with i
 
 We have provided a default implementation for `getNextNonce()` and `updateLatestNonce()` in `Consumer.sol` to implement a simple nonce which increases by 1 every time a job is requested. This should be good enough for most apps, but you can override it in your consumer contract if you'd like. For example, you could use the unix timestamp in milliseconds as the nonce for offchain calls to the coprocessor.
 
-### Note: Stateful app servers
+### Note: App servers
 
 With InfinityVM, some apps can leverage offchain job requests to run as real-time servers. Because of the limitations of foundry, you can't build and test an app server using the foundry template. Instead, you would need to write tests for your app server similar to how you would write end-to-end tests for any multi service setup. We have example end-to-end tests for app servers in the InfinityVM repo.
 
