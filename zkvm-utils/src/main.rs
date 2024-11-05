@@ -171,6 +171,9 @@ async fn execute_offchain_job_ffi(
 
     let journal = execute_offchain_job(&elf, &onchain_input, &offchain_input, max_cycles)?;
     let job_id = get_job_id(nonce, Address::from_str(&consumer).unwrap());
+
+    // Note: We don't actually post blobs in this foundry template, so we pass in
+    // an empty vector here.
     let versioned_blob_hashes = vec![];
     let offchain_result_with_metadata = abi_encode_offchain_result_with_metadata(
         job_id,
