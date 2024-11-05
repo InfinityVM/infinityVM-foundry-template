@@ -165,6 +165,8 @@ contract JobManager is
         // Make sure the blob hashes match and persist them.
         // Note: `blobhash` is a special opcode introduced in cancun
         // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md#opcode-to-get-versioned-hashes
+        // Note: We don't actually post blobs in this foundry template, so
+        // versionedBlobHashes will always be empty.
         if (result.versionedBlobHashes.length != 0) {
             for (uint256 i = 0; i < result.versionedBlobHashes.length; i++) {
                 bytes32 contextVersionedHash = blobhash(i);
