@@ -32,10 +32,10 @@ interface IJobManager {
         bytes32 jobID;
         bytes32 onchainInputHash;
         bytes32 offchainInputHash;
-        bytes32 stateHash;
         uint64 maxCycles;
         bytes32 programID;
         bytes result;
+        bytes32[] versionedBlobHashes;
     }
 
     struct OffchainJobRequest {
@@ -45,7 +45,6 @@ interface IJobManager {
         bytes32 programID;
         bytes onchainInput;
         bytes32 offchainInputHash;
-        bytes32 stateHash;
     }
 
     // FUNCTIONS
@@ -54,7 +53,7 @@ interface IJobManager {
     function cancelJob(bytes32 jobID) external;
     function submitResult(bytes calldata resultWithMetadata, bytes calldata signature) external;
     function submitResultForOffchainJob(bytes calldata offchainResultWithMetadata, bytes calldata signatureOnResult, bytes calldata jobRequest, bytes calldata signatureOnRequest) external;
-    function requestOffchainJob(OffchainJobRequest memory request, bytes calldata offchainInput, bytes calldata state, string calldata privateKey) external;
+    function requestOffchainJob(OffchainJobRequest memory request, bytes calldata offchainInput, string calldata privateKey) external;
     function setRelayer(address _relayer) external;
     function getRelayer() external view returns (address);
     function setCoprocessorOperator(address _coprocessorOperator) external;

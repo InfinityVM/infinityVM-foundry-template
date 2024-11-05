@@ -6,8 +6,8 @@ This repository implements an example application using InfinityVM. InfinityVM e
 
 This repo contains three folders:
 1. `programs`: Rust programs that contain application logic to be run offchain in the coprocessor.
-2. `contracts`: An `SquareRootConsumer` contract for the application, contracts for the coprocessor, and tests and a deploy script for the contracts.
-    - To build on InfinityVM, you just need the `SquareRootConsumer.sol` and `SquareRootConsumer.t.sol` files. The coprocessor contracts in `contracts/coprocessor` expose an interface you can use but you don't need to read how they're implemented.
+2. `contracts`: A `SquareRootConsumer` contract for the application, contracts for the coprocessor, and tests and a deploy script for the contracts.
+    - To build on InfinityVM, you just need to read the `SquareRootConsumer.sol` and `SquareRootConsumer.t.sol` files. The coprocessor contracts in `contracts/coprocessor` expose an interface you can use but you don't need to read how they're implemented.
 3. `zkvm-utils`: Utility functions for InfinityVM. *You don't need to read these files to build on InfinityVM.*
 
 The flow of the InfinityVM coprocessor looks like this:
@@ -126,6 +126,10 @@ Feel free to reach out to our team if you have any questions, we're happy to hel
 Each job request for an app contract must have a unique `nonce` submitted with it, to prevent replay attacks. The `Consumer.sol` contract contains a `getNextNonce()` function to return the next nonce to be used by job requests from the contracts and offchain users, and an `updateLatestNonce()` function to update the latest nonce value once a job has been submitted. 
 
 We have provided a default implementation for `getNextNonce()` and `updateLatestNonce()` in `Consumer.sol` to implement a simple nonce which increases by 1 every time a job is requested. This should be good enough for most apps, but you can override it in your consumer contract if you'd like. For example, you could use the unix timestamp in milliseconds as the nonce for offchain calls to the coprocessor.
+
+### Note: App servers
+
+With InfinityVM, some apps can leverage offchain job requests to run as real-time servers. Because of the limitations of foundry, you can't build and test an app server using the foundry template. Instead, you would need to write tests for your app server similar to how you would write end-to-end tests for any multi service setup. We have example end-to-end tests for app servers in the InfinityVM repo.
 
 ### Development
 

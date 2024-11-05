@@ -4,11 +4,15 @@ import {JobManager} from "./JobManager.sol";
 import {console} from "forge-std/Script.sol";
 
 abstract contract Consumer {
+    struct JobInputs {
+        bytes onchainInput;
+        bytes32 offchainInputHash;
+    }
+
     JobManager internal _jobManager;
     uint64 public maxNonce;
-    mapping(bytes32 => bytes) internal jobIDToOnchainInput;
-    mapping(bytes32 => bytes32) internal jobIDToOffchainInputHash;
-    mapping(bytes32 => bytes32) internal jobIDToStateHash;
+
+    mapping(bytes32 => JobInputs) internal jobIDToInputs;
 
     constructor(address __jobManager, uint64 _initialMaxNonce) {
         _jobManager = JobManager(__jobManager);
@@ -24,15 +28,11 @@ abstract contract Consumer {
     }
 
     function getOnchainInputForJob(bytes32 jobID) public view virtual returns (bytes memory) {
-        return jobIDToOnchainInput[jobID];
+        return jobIDToInputs[jobID].onchainInput;
     }
 
     function getOffchainInputHashForJob(bytes32 jobID) public view virtual returns (bytes32) {
-        return jobIDToOffchainInputHash[jobID];
-    }
-
-    function getStateHashForJob(bytes32 jobID) public view virtual returns (bytes32) {
-        return jobIDToStateHash[jobID];
+        return jobIDToInputs[jobID].offchainInputHash;
     }
 
     // Returns the next nonce to be used for a job
@@ -40,16 +40,15 @@ abstract contract Consumer {
         return maxNonce + 1;
     }
 
-    function setOnchainInputForJob(bytes32 jobID, bytes memory onchainInput) public virtual onlyJobManager() {
-        jobIDToOnchainInput[jobID] = onchainInput;
-    }
-
-    function setOffchainInputHashForJob(bytes32 jobID, bytes32 offchainInputHash) public virtual onlyJobManager() {
-        jobIDToOffchainInputHash[jobID] = offchainInputHash;
-    }
-
-    function setStateHashForJob(bytes32 jobID, bytes32 stateHash) public virtual onlyJobManager() {
-        jobIDToStateHash[jobID] = stateHash;
+    // We have a single setter function here to improve gas efficiency
+    function setInputsForJob(
+        bytes32 jobID,
+        bytes memory onchainInput,
+        bytes32 offchainInputHash
+    ) public virtual onlyJobManager() {
+        JobInputs storage jobInputs = jobIDToInputs[jobID];
+        jobInputs.onchainInput = onchainInput;
+        jobInputs.offchainInputHash = offchainInputHash;
     }
 
     // Updates the maxNonce if the latest nonce is greater than the current maxNonce
@@ -65,7 +64,8 @@ abstract contract Consumer {
         uint64 maxCycles
     ) internal virtual returns (bytes32) {
         bytes32 jobID = _jobManager.createJob(getNextNonce(), programID, onchainInput, maxCycles);
-        jobIDToOnchainInput[jobID] = onchainInput;
+        // Set onchain input
+        jobIDToInputs[jobID].onchainInput = onchainInput;
         return jobID;
     }
 

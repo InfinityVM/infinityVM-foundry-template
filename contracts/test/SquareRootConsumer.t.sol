@@ -47,14 +47,12 @@ contract SquareRootConsumerTest is Test, Deployer {
             address(consumer), // Consumer address to send result to
             ProgramID.SQUARE_ROOT_ID, // Program ID
             abi.encode(9), // Onchain input
-            keccak256(""), // Offchain input
-            keccak256("") // State
+            keccak256("") // Offchain input
         );
 
         jobManager.requestOffchainJob(
             request,
             "", // Offchain input
-            "", // State
             DEFAULT_OFFCHAIN_SIGNER_PRIVATE_KEY // Private key of offchain request signer
         );
 
