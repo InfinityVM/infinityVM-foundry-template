@@ -171,6 +171,7 @@ async fn execute_offchain_job_ffi(
 
     let journal = execute_offchain_job(&elf, &onchain_input, &offchain_input, max_cycles)?;
     let job_id = get_job_id(nonce, Address::from_str(&consumer).unwrap());
+    let versioned_blob_hashes = vec![];
     let offchain_result_with_metadata = abi_encode_offchain_result_with_metadata(
         job_id,
         onchain_input_hash.into(),
@@ -178,6 +179,7 @@ async fn execute_offchain_job_ffi(
         max_cycles,
         program_id_bytes,
         journal,
+        versioned_blob_hashes,
     );
     let zkvm_operator_signature = sign_message(&offchain_result_with_metadata, signer).await?;
 
@@ -262,9 +264,9 @@ pub type ResultWithMetadata = sol! {
 /// executed an offchain job. Also the result payload the job manager contract expects.
 ///
 /// tuple(JobID,OnchainInputHash,OffchainInputHash,OffchainStateHash,MaxCycles,VerifyingKey,
-/// `RawOutput`)
+/// RawOutput,VersionedBlobHashes)
 pub type OffChainResultWithMetadata = sol! {
-    tuple(bytes32,bytes32,bytes32,uint64,bytes32,bytes)
+    tuple(bytes32,bytes32,bytes32,uint64,bytes32,bytes,bytes32[])
 };
 
 /// The payload that gets signed by the entity sending an offchain job request.
@@ -324,6 +326,7 @@ pub fn abi_encode_offchain_result_with_metadata(
     max_cycles: u64,
     program_verifying_key: &[u8; 32],
     raw_output: Vec<u8>,
+    versioned_blob_hashes: Vec<[u8; 32]>,
 ) -> Vec<u8> {
     OffChainResultWithMetadata::abi_encode(&(
         job_id,
@@ -332,6 +335,7 @@ pub fn abi_encode_offchain_result_with_metadata(
         max_cycles,
         program_verifying_key,
         raw_output,
+        versioned_blob_hashes,
     ))
 }
 
