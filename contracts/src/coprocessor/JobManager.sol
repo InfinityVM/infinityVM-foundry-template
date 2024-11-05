@@ -38,6 +38,8 @@ contract JobManager is
 
     // Mapping from job ID --> job metadata
     mapping(bytes32 => JobMetadata) public jobIDToMetadata;
+    // Mapping from job ID --> versioned blob hashes
+    mapping(bytes32 => bytes32[]) public jobIDToBlobhashes;
     // Mapping from program ID (verification key) --> ELF path
     mapping(bytes32 => string) public programIDToElfPath;
     // storage gap for upgradeability
@@ -99,12 +101,12 @@ contract JobManager is
     function _createJob(uint64 nonce, bytes32 jobID, bytes32 programID, uint64 maxCycles, address consumer, bytes memory onchainInput) internal {
         require(jobIDToMetadata[jobID].status == 0, "JobManager.createJob: job already exists with this nonce and consumer");
         jobIDToMetadata[jobID] = JobMetadata(programID, maxCycles, consumer, JOB_STATE_PENDING);
-        Consumer(consumer).setOnchainInputForJob(jobID, onchainInput);
+        Consumer(consumer).setInputsForJob(jobID, onchainInput, keccak256(""));
         Consumer(consumer).updateLatestNonce(nonce);
     }
 
-    function requestOffchainJob(OffchainJobRequest calldata request, bytes calldata offchainInput, bytes calldata state, string calldata privateKey) public {
-        (bytes memory resultWithMetadata, bytes memory resultSignature, bytes memory jobRequest, bytes memory requestSignature) = executeOffchainJob(request, offchainInput, state, privateKey);
+    function requestOffchainJob(OffchainJobRequest calldata request, bytes calldata offchainInput, string calldata privateKey) public {
+        (bytes memory resultWithMetadata, bytes memory resultSignature, bytes memory jobRequest, bytes memory requestSignature) = executeOffchainJob(request, offchainInput, privateKey);
 
         submitResultForOffchainJob(resultWithMetadata, resultSignature, jobRequest, requestSignature);
     }
@@ -145,7 +147,6 @@ contract JobManager is
     ) public override {
         // Decode the job request using abi.decode
         OffchainJobRequest memory request = abi.decode(jobRequest, (OffchainJobRequest));
-
         bytes32 jobID = keccak256(abi.encodePacked(request.nonce, request.consumer));
 
         // Verify signature on job request
@@ -156,16 +157,30 @@ contract JobManager is
         bytes32 resultHash = ECDSA.toEthSignedMessageHash(offchainResultWithMetadata);
         require(ECDSA.tryRecover(resultHash, signatureOnResult) == coprocessorOperator, "JobManager.submitResultForOffchainJob: Invalid signature on result");
 
-        // Create a job without emitting an event and set onchain input, offchain input hash, and state hash on consumer
-        _createJob(request.nonce, jobID, request.programID, request.maxCycles, request.consumer, request.onchainInput);
-        Consumer(request.consumer).setOffchainInputHashForJob(jobID, request.offchainInputHash);
-        Consumer(request.consumer).setStateHashForJob(jobID, request.stateHash);
-
         // Decode the result using abi.decode
         OffchainResultWithMetadata memory result = abi.decode(offchainResultWithMetadata, (OffchainResultWithMetadata));
         require(jobID == result.jobID, "JobManager.submitResultForOffchainJob: job ID signed by coprocessor doesn't match job ID of job request");
         require(request.offchainInputHash == result.offchainInputHash, "JobManager.submitResultForOffchainJob: offchain input hash signed by coprocessor doesn't match offchain input hash of job request");
-        require(request.stateHash == result.stateHash, "JobManager.submitResultForOffchainJob: state hash signed by coprocessor doesn't match state hash of job request");
+
+        // Make sure the blob hashes match and persist them.
+        // Note: `blobhash` is a special opcode introduced in cancun
+        // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4844.md#opcode-to-get-versioned-hashes
+        if (result.versionedBlobHashes.length != 0) {
+            for (uint256 i = 0; i < result.versionedBlobHashes.length; i++) {
+                bytes32 contextVersionedHash = blobhash(i);
+                bytes32 userVersionedHash = result.versionedBlobHashes[i];
+                require(
+                    contextVersionedHash == userVersionedHash, 
+                    "JobManager.submitResultForOffchainJob: given blob hash does not match"
+                );
+            }
+            jobIDToBlobhashes[jobID] = result.versionedBlobHashes;
+        }
+
+        // Create a job without emitting an event and set onchain input and offchain input hash on consumer
+        _createJob(request.nonce, jobID, request.programID, request.maxCycles, request.consumer, request.onchainInput);
+        Consumer(request.consumer).setInputsForJob(jobID, request.onchainInput, request.offchainInputHash);
+
         _submitResult(jobID, result.maxCycles, result.onchainInputHash, result.programID, result.result);
     }
 
@@ -216,9 +231,9 @@ contract JobManager is
         return abi.decode(vm.ffi(imageRunnerInput), (bytes, bytes));
     }
 
-    function executeOffchainJob(OffchainJobRequest calldata request, bytes calldata offchainInput, bytes calldata state, string calldata privateKey) internal returns (bytes memory, bytes memory, bytes memory, bytes memory) {
+    function executeOffchainJob(OffchainJobRequest calldata request, bytes calldata offchainInput, string calldata privateKey) internal returns (bytes memory, bytes memory, bytes memory, bytes memory) {
         string memory elfPath = getElfPath(request.programID);
-        string[] memory imageRunnerInput = new string[](16);
+        string[] memory imageRunnerInput = new string[](15);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
         imageRunnerInput[i++] = "run";
@@ -231,7 +246,6 @@ contract JobManager is
         imageRunnerInput[i++] = elfPath;
         imageRunnerInput[i++] = request.onchainInput.toHexString();
         imageRunnerInput[i++] = offchainInput.toHexString();
-        imageRunnerInput[i++] = state.toHexString();
         imageRunnerInput[i++] = request.maxCycles.toString();
         imageRunnerInput[i++] = request.consumer.toHexString();
         imageRunnerInput[i++] = request.nonce.toString();

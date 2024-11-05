@@ -44,9 +44,6 @@ enum Command {
         /// The hex encoded offchain input to provide to the guest binary
         offchain_input: String,
 
-        /// The hex encoded offchain state to provide to the guest binary
-        state: String,
-
         /// The maximum number of cycles to run the program for
         max_cycles: u64,
 
@@ -84,7 +81,6 @@ pub async fn main() -> Result<()> {
             guest_binary_path,
             onchain_input,
             offchain_input,
-            state,
             max_cycles,
             consumer,
             nonce,
@@ -94,7 +90,6 @@ pub async fn main() -> Result<()> {
                 guest_binary_path,
                 hex::decode(onchain_input.strip_prefix("0x").unwrap_or(&onchain_input))?,
                 hex::decode(offchain_input.strip_prefix("0x").unwrap_or(&offchain_input))?,
-                hex::decode(state.strip_prefix("0x").unwrap_or(&state))?,
                 max_cycles,
                 consumer,
                 nonce,
@@ -147,7 +142,6 @@ async fn execute_offchain_job_ffi(
     elf_path: String,
     onchain_input: Vec<u8>,
     offchain_input: Vec<u8>,
-    state: Vec<u8>,
     max_cycles: u64,
     consumer: String,
     nonce: u64,
@@ -160,7 +154,6 @@ async fn execute_offchain_job_ffi(
 
     let onchain_input_hash = keccak256(onchain_input.clone());
     let offchain_input_hash = keccak256(offchain_input.clone());
-    let state_hash = keccak256(state.clone());
     // Create a signed job request
     // This would normally be sent by the user/app signer, but we
     // construct it here to work with the foundry tests.
@@ -171,19 +164,17 @@ async fn execute_offchain_job_ffi(
         program_id_bytes,
         onchain_input.clone(),
         offchain_input_hash.into(),
-        state_hash.into(),
     );
 
     let offchain_signer = create_signer(&secret)?;
     let offchain_signer_signature = sign_message(&job_request, &offchain_signer).await?;
 
-    let journal = execute_offchain_job(&elf, &onchain_input, &offchain_input, &state, max_cycles)?;
+    let journal = execute_offchain_job(&elf, &onchain_input, &offchain_input, max_cycles)?;
     let job_id = get_job_id(nonce, Address::from_str(&consumer).unwrap());
     let offchain_result_with_metadata = abi_encode_offchain_result_with_metadata(
         job_id,
         onchain_input_hash.into(),
         offchain_input_hash.into(),
-        state_hash.into(),
         max_cycles,
         program_id_bytes,
         journal,
@@ -225,12 +216,10 @@ fn execute_offchain_job(
     elf: &[u8],
     onchain_input: &[u8],
     offchain_input: &[u8],
-    state: &[u8],
     max_cycles: u64,
 ) -> Result<Vec<u8>> {
     let onchain_input_len = onchain_input.len() as u32;
     let offchain_input_len = offchain_input.len() as u32;
-    let state_len = state.len() as u32;
 
     let env = ExecutorEnv::builder()
         .session_limit(Some(max_cycles))
@@ -238,8 +227,6 @@ fn execute_offchain_job(
         .write_slice(onchain_input)
         .write(&offchain_input_len)?
         .write_slice(offchain_input)
-        .write(&state_len)?
-        .write_slice(state)
         .build()?;
 
     let prover = LocalProver::new("locals only");
@@ -277,14 +264,14 @@ pub type ResultWithMetadata = sol! {
 /// tuple(JobID,OnchainInputHash,OffchainInputHash,OffchainStateHash,MaxCycles,VerifyingKey,
 /// `RawOutput`)
 pub type OffChainResultWithMetadata = sol! {
-    tuple(bytes32,bytes32,bytes32,bytes32,uint64,bytes32,bytes)
+    tuple(bytes32,bytes32,bytes32,uint64,bytes32,bytes)
 };
 
 /// The payload that gets signed by the entity sending an offchain job request.
 /// This can be the user but the Consumer contract can decide who needs to
 /// sign this request.
 pub type OffchainJobRequest = sol! {
-    tuple(uint64,uint64,address,bytes32,bytes,bytes32,bytes32)
+    tuple(uint64,uint64,address,bytes32,bytes,bytes32)
 };
 
 /// Returns ABI-encoded calldata with result and signature. This ABI-encoded response will be
@@ -334,7 +321,6 @@ pub fn abi_encode_offchain_result_with_metadata(
     job_id: [u8; 32],
     onchain_input_hash: [u8; 32],
     offchain_input_hash: [u8; 32],
-    state_hash: [u8; 32],
     max_cycles: u64,
     program_verifying_key: &[u8; 32],
     raw_output: Vec<u8>,
@@ -343,7 +329,6 @@ pub fn abi_encode_offchain_result_with_metadata(
         job_id,
         onchain_input_hash,
         offchain_input_hash,
-        state_hash,
         max_cycles,
         program_verifying_key,
         raw_output,
@@ -360,7 +345,6 @@ pub fn abi_encode_offchain_job_request(
     program_verifying_key: &[u8; 32],
     onchain_input: Vec<u8>,
     offchain_input_hash: [u8; 32],
-    state_hash: [u8; 32],
 ) -> Vec<u8> {
     OffchainJobRequest::abi_encode(&(
         nonce,
@@ -369,7 +353,6 @@ pub fn abi_encode_offchain_job_request(
         program_verifying_key,
         onchain_input,
         offchain_input_hash,
-        state_hash,
     ))
 }
 
