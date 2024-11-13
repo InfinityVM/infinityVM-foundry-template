@@ -19,3 +19,8 @@ risc0-zkp = { workspace = true }
 risc0-zkvm = { workspace = true, features = ["client"] }
 tokio = { workspace = true }
 
+sp1-zkvm = { workspace = true }
+sp1-sdk = { workspace = true }
+sp1-helper = { workspace = true }
+sp1-build = { workspace = true }
+

@@ -6,6 +6,8 @@ rust-version = "1.79"
 [workspace]
 members = [
 	"programs",
+    "programs-sp1",
+    "programs-sp1/program",
     "zkvm-utils",
 ]
 
@@ -107,8 +109,9 @@ risc0-build = { version = "1", default-features = false }
 risc0-zkp = { version = "1.0", default-features = false }
 risc0-binfmt = { version = "1", default-features = false }
 
-sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", features = ["libm"], rev = "9a19e0becfe2bd133d3b1bf7070edf90892f7171", default-features = false }
-sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "9a19e0becfe2bd133d3b1bf7070edf90892f7171", default-features = false }
-sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", rev = "9a19e0becfe2bd133d3b1bf7070edf90892f7171", default-features = false }
+sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", rev = "8a62caa0b8893aabe8e9477d4568c20387ae4896", features = ["libm", "lib"], default-features = false }
+sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "8a62caa0b8893aabe8e9477d4568c20387ae4896", default-features = false }
+sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", rev = "8a62caa0b8893aabe8e9477d4568c20387ae4896", default-features = false }
+sp1-build = "3.1.0"
 
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"], default-features = false }
