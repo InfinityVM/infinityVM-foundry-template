@@ -29,7 +29,7 @@ fn main() {
     }
 
     // For each program, build the ELF.
-    for program in programs {
+    for program in programs.clone() {
         let args = BuildArgs {
             elf_name: program.clone(),
             output_directory: "programs/elf".to_string(),
@@ -43,5 +43,5 @@ fn main() {
         .with_program_id_sol_path(SOLIDITY_PROGRAM_ID_PATH)
         .with_deploy_script_path(SOLIDITY_DEPLOY_SCRIPT_PATH);
 
-    // generate_solidity_files(guests.as_slice(), &solidity_opts).unwrap();
+    generate_solidity_files(programs, &solidity_opts).unwrap();
 }

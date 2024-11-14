@@ -7,6 +7,7 @@ use std::{
 
 use alloy::primitives::hex;
 use anyhow::{anyhow, bail, Context, Result};
+use ivm_zkvm::{Sp1, Zkvm};
 use risc0_build::GuestListEntry;
 use risc0_zkp::core::digest::Digest;
 
@@ -14,6 +15,12 @@ const PROGRAM_ID_LIB_HEADER: &str = r#"pragma solidity ^0.8.13;
 
 library ProgramID {
 "#;
+
+pub struct ProgramMetadata {
+    pub name: String,
+    pub program_id_hex: String,
+    pub elf_path: String,
+}
 
 /// Options for building and code generation.
 #[derive(Debug, Clone, Default)]
@@ -43,37 +50,45 @@ impl Options {
 }
 
 /// Generate Solidity files for testing a consumer app with `InfinityVM`.
-pub fn generate_solidity_files(guests: &[GuestListEntry], opts: &Options) -> Result<()> {
+pub fn generate_solidity_files(program_names: Vec<String>, opts: &Options) -> Result<()> {
     // Skip Solidity source files generation if INFINITY_SKIP_BUILD is enabled.
     if env::var("INFINITY_SKIP_BUILD").is_ok() {
         return Ok(());
     }
 
+    // Construct program metadata.
+    let programs: Vec<ProgramMetadata> = program_names.iter().map(|name| {
+        let elf_path = format!("elf/{name}");
+        let elf = std::fs::read(elf_path.clone()).unwrap();
+        let program_id = ivm_zkvm::Sp1.derive_verifying_key(&elf).unwrap();
+        ProgramMetadata { name: name.clone(), program_id_hex: hex::encode(program_id), elf_path }
+    }).collect();
+
     let program_id_file_path = opts
         .program_id_sol_path
         .as_ref()
         .ok_or_else(|| anyhow!("path for program ID Solidity file must be provided"))?;
-    fs::write(program_id_file_path, generate_program_id_sol(guests)?)
+    fs::write(program_id_file_path, generate_program_id_sol(&programs)?)
         .with_context(|| format!("failed to save changes to {}", program_id_file_path.display()))?;
 
     let deploy_script_path = opts
         .deploy_script_path
         .as_ref()
         .ok_or_else(|| anyhow!("path for deploy script Solidity file must be provided"))?;
-    fs::write(deploy_script_path, generate_deploy_script(guests)?)
+    fs::write(deploy_script_path, generate_deploy_script(&programs)?)
         .with_context(|| format!("failed to save changes to {}", deploy_script_path.display()))?;
 
     Ok(())
 }
 
-/// Generate source code for a Solidity library containing program IDs for the given guest programs.
-pub fn generate_program_id_sol(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
+/// Generate source code for a Solidity library containing program IDs for the given programs.
+pub fn generate_program_id_sol(programs: &[ProgramMetadata]) -> Result<Vec<u8>> {
     // Assemble a list of program IDs.
-    let program_ids: Vec<_> = guests
+    let program_ids: Vec<_> = programs
         .iter()
-        .map(|guest| {
-            let name = guest.name.to_uppercase().replace('-', "_");
-            let program_id = hex::encode(Digest::from(guest.image_id));
+        .map(|program| {
+            let name = program.name.to_uppercase().replace('-', "_");
+            let program_id = program.program_id_hex.clone();
             format!("bytes32 public constant {name}_ID = bytes32(0x{program_id});")
         })
         .collect();
@@ -86,14 +101,14 @@ pub fn generate_program_id_sol(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
 }
 
 /// Generate source code for Solidity deploy script for coprocessor contracts
-pub fn generate_deploy_script(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
+pub fn generate_deploy_script(programs: &[ProgramMetadata]) -> Result<Vec<u8>> {
     // Generate the code to set ELF paths
-    let relative_elf_path_prefix = "target/riscv-guest/riscv32im-risc0-zkvm-elf/release/";
-    let elf_entries: Vec<_> = guests
+    let relative_elf_path_prefix = "programs/elf/";
+    let elf_entries: Vec<_> = programs
         .iter()
-        .map(|guest| {
-            let program_id = hex::encode(Digest::from(guest.image_id));
-            let absolute_elf_path = guest.path.to_string();
+        .map(|program| {
+            let program_id = program.program_id_hex.clone();
+            let absolute_elf_path = program.elf_path.to_string();
             let relative_elf_path =
                 if let Some(pos) = absolute_elf_path.find(relative_elf_path_prefix) {
                     &absolute_elf_path[pos..]
