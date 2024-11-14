@@ -11,12 +11,12 @@ use alloy_sol_types::{sol, SolType};
 use anyhow::{Context, Result};
 use clap::Parser;
 use ivm_abi::{
-    get_job_id, JobParams, abi_encode_offchain_job_request, abi_encode_result_with_metadata,
-    abi_encode_offchain_result_with_metadata,
+    get_job_id, JobParams, abi_encode_offchain_job_request,
 };
+use ivm_proto::VmType;
+use ivm_zkvm::Zkvm;
+use zkvm_executor::service::ZkvmExecutorService;
 use k256::ecdsa::SigningKey;
-use risc0_binfmt::compute_image_id;
-use risc0_zkvm::{Executor, ExecutorEnv, LocalProver};
 
 type K256LocalSigner = LocalSigner<SigningKey>;
 
@@ -67,6 +67,7 @@ enum Command {
 pub async fn main() -> Result<()> {
     let secret = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
     let signer = create_signer(secret)?;
+    let zkvm_executor = ZkvmExecutorService::new(signer);
 
     match Command::parse() {
         Command::ExecuteOnchainJob { guest_binary_path, onchain_input, job_id, max_cycles } => {
@@ -77,7 +78,7 @@ pub async fn main() -> Result<()> {
                 hex::decode(onchain_input.strip_prefix("0x").unwrap_or(&onchain_input))?,
                 job_id_decoded,
                 max_cycles,
-                &signer,
+                &zkvm_executor,
             )
             .await?
         }
@@ -98,7 +99,7 @@ pub async fn main() -> Result<()> {
                 consumer,
                 nonce,
                 secret,
-                &signer,
+                &zkvm_executor,
             )
             .await?
         }
@@ -107,27 +108,28 @@ pub async fn main() -> Result<()> {
     Ok(())
 }
 
-/// Prints on stdio the Ethereum ABI and hex encoded result and signature.
+/// Prints on stdio the Ethereum ABI and hex encoded result and signature
+/// for an onchain job.
 async fn execute_onchain_job_ffi(
     elf_path: String,
     onchain_input: Vec<u8>,
     job_id: [u8; 32],
     max_cycles: u64,
-    signer: &K256LocalSigner,
+    zkvm_executor: &ZkvmExecutorService<LocalSigner<SigningKey>>,
 ) -> Result<()> {
     let elf = std::fs::read(elf_path).unwrap();
-    let program_id = compute_image_id(&elf)?;
-    let program_id_bytes = program_id.as_bytes().try_into().expect("program id is 32 bytes");
-    let journal = execute_onchain_job(&elf, &onchain_input, max_cycles)?;
-    let result_with_metadata = abi_encode_result_with_metadata(
-        job_id,
-        onchain_input.as_slice().try_into().unwrap(),
-        max_cycles,
-        program_id_bytes,
-        &journal,
-    );
+    let program_id = ivm_zkvm::Sp1.derive_verifying_key(&elf)?;
 
-    let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
+    let (result_with_metadata, zkvm_operator_signature) = zkvm_executor
+        .execute_onchain_job(
+            job_id,
+            max_cycles,
+            program_id,
+            onchain_input,
+            elf,
+            VmType::Sp1,
+        )
+        .await.unwrap();
 
     let calldata =
         abi_encode_result_with_signature_calldata(result_with_metadata, zkvm_operator_signature);
@@ -150,14 +152,12 @@ async fn execute_offchain_job_ffi(
     consumer: String,
     nonce: u64,
     secret: String,
-    signer: &K256LocalSigner,
+    zkvm_executor: &ZkvmExecutorService<LocalSigner<SigningKey>>,
 ) -> Result<()> {
     let elf = std::fs::read(elf_path).unwrap();
-    let program_id = compute_image_id(&elf)?;
-    let program_id_bytes = program_id.as_bytes().try_into().expect("program id is 32 bytes");
-
-    let onchain_input_hash = keccak256(onchain_input.clone());
+    let program_id = ivm_zkvm::Sp1.derive_verifying_key(&elf)?;
     let offchain_input_hash = keccak256(offchain_input.clone());
+
     // Create a signed job request
     // This would normally be sent by the user/app signer, but we
     // construct it here to work with the foundry tests.
@@ -165,31 +165,27 @@ async fn execute_offchain_job_ffi(
         nonce,
         max_cycles,
         consumer_address: **Address::from_str(&consumer).unwrap(),
-        program_id: program_id_bytes,
+        program_id: &program_id,
         onchain_input: &onchain_input,
         offchain_input_hash: offchain_input_hash.into(),
     };
     let job_request = abi_encode_offchain_job_request(job_params);
-
     let offchain_signer = create_signer(&secret)?;
     let offchain_signer_signature = sign_message(&job_request, &offchain_signer).await?;
 
-    let journal = execute_offchain_job(&elf, &onchain_input, &offchain_input, max_cycles)?;
     let job_id = get_job_id(nonce, Address::from_str(&consumer).unwrap());
-
-    // Note: We don't actually post blobs in this foundry template, so we pass in
-    // an empty vector here.
-    let versioned_blob_hashes = vec![];
-    let offchain_result_with_metadata = abi_encode_offchain_result_with_metadata(
-        job_id,
-        onchain_input_hash.into(),
-        offchain_input_hash.into(),
-        max_cycles,
-        program_id_bytes,
-        &journal,
-        versioned_blob_hashes,
-    );
-    let zkvm_operator_signature = sign_message(&offchain_result_with_metadata, signer).await?;
+    let (offchain_result_with_metadata, zkvm_operator_signature, _) = zkvm_executor
+        .execute_offchain_job(
+            job_id,
+            max_cycles,
+            program_id,
+            onchain_input,
+            offchain_input,
+            elf,
+            VmType::Sp1,
+        )
+        .await
+        .unwrap();
 
     let calldata = abi_encode_offchain_result_with_signature_calldata(
         offchain_result_with_metadata,
@@ -203,46 +199,6 @@ async fn execute_offchain_job_ffi(
     print!("{output}");
     std::io::stdout().flush().context("failed to flush stdout buffer")?;
     Ok(())
-}
-
-/// Generates journal for the given elf and input, for an onchain job.
-fn execute_onchain_job(elf: &[u8], onchain_input: &[u8], max_cycles: u64) -> Result<Vec<u8>> {
-    let onchain_input_len = onchain_input.len() as u32;
-
-    let env = ExecutorEnv::builder()
-        .session_limit(Some(max_cycles))
-        .write(&onchain_input_len)?
-        .write_slice(onchain_input)
-        .build()?;
-
-    let prover = LocalProver::new("locals only");
-    let prove_info = prover.execute(env, elf)?;
-
-    Ok(prove_info.journal.bytes)
-}
-
-/// Generates journal for the given elf and input, for an offchain job.
-fn execute_offchain_job(
-    elf: &[u8],
-    onchain_input: &[u8],
-    offchain_input: &[u8],
-    max_cycles: u64,
-) -> Result<Vec<u8>> {
-    let onchain_input_len = onchain_input.len() as u32;
-    let offchain_input_len = offchain_input.len() as u32;
-
-    let env = ExecutorEnv::builder()
-        .session_limit(Some(max_cycles))
-        .write(&onchain_input_len)?
-        .write_slice(onchain_input)
-        .write(&offchain_input_len)?
-        .write_slice(offchain_input)
-        .build()?;
-
-    let prover = LocalProver::new("locals only");
-    let prove_info = prover.execute(env, elf)?;
-
-    Ok(prove_info.journal.bytes)
 }
 
 /// The payload with result + signature that gets sent to the `JobManager` contract to decode.

@@ -103,6 +103,9 @@ alloy-sol-types = { version = "0.7", default-features = false }
 clap = { version = "4", features = ["derive"] }
 
 ivm-abi = { git = "https://github.com/InfinityVM/InfinityVM.git", rev = "f360c96" }
+# TODO: Update these to main after merging SP1 feature branch
+ivm-proto = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "sp1-feature-branch" }
+ivm-zkvm = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "sp1-feature-branch" }
 zkvm-executor = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "sp1-feature-branch" }
 
 k256 = { version = "0.13", default-features = false }

@@ -7170,6 +7170,8 @@ dependencies = [
  "anyhow",
  "clap",
  "ivm-abi 0.0.1 (git+https://github.com/InfinityVM/InfinityVM.git?rev=f360c96)",
+ "ivm-proto",
+ "ivm-zkvm",
  "k256",
  "risc0-binfmt",
  "risc0-build",
