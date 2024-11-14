@@ -11,7 +11,6 @@ type NumberWithSquareRoot = sol! {
 fn main() {
     // This application only uses onchain input. We read the onchain input here.
     let onchain_input = sp1_zkvm::io::read_vec();
-
     // Decode and parse the input
     let number = <U256>::abi_decode(&onchain_input, true).unwrap();
 
