@@ -1,12 +1,12 @@
-/// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
-pub const PROGRAM_ELF: &[u8] = include_bytes!("../elf/program-elf");
+/// The ELF (executable and linkable format) file for the square root program.
+pub const SQUARE_ROOT_ELF: &[u8] = include_bytes!("../elf/square-root");
 
 #[cfg(test)]
 mod tests {
     use alloy_primitives::U256;
     use alloy_sol_types::{sol, SolType, SolValue};
     use sp1_sdk::{ProverClient, SP1Stdin};
-    use crate::PROGRAM_ELF;
+    use crate::SQUARE_ROOT_ELF;
 
     type NumberWithSquareRoot = sol! {
         tuple(uint256,uint256)
@@ -25,7 +25,7 @@ mod tests {
 
         let client = ProverClient::new();
         let (output, _) = client
-            .execute(PROGRAM_ELF, stdin)
+            .execute(SQUARE_ROOT_ELF, stdin)
             .max_cycles(MAX_CYCLES)
             .run()
             .unwrap();
