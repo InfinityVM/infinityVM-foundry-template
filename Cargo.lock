@@ -4229,20 +4229,10 @@ version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.7.7",
  "alloy-sol-types",
- "risc0-build",
- "risc0-zkvm",
- "zkvm-utils",
-]
-
-[[package]]
-name = "programs-sp1"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives 0.7.7",
- "alloy-sol-types",
  "sp1-build 3.2.1",
  "sp1-helper",
  "sp1-sdk",
+ "zkvm-utils",
 ]
 
 [[package]]

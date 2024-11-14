@@ -1,10 +1,12 @@
-include!(concat!(env!("OUT_DIR"), "/methods.rs"));
+/// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
+pub const PROGRAM_ELF: &[u8] = include_bytes!("../elf/program-elf");
 
 #[cfg(test)]
 mod tests {
     use alloy_primitives::U256;
     use alloy_sol_types::{sol, SolType, SolValue};
-    use risc0_zkvm::{Executor, ExecutorEnv, LocalProver};
+    use sp1_sdk::{ProverClient, SP1Stdin};
+    use crate::PROGRAM_ELF;
 
     type NumberWithSquareRoot = sol! {
         tuple(uint256,uint256)
@@ -17,22 +19,20 @@ mod tests {
         // Input for program
         let number = U256::from(9);
         let onchain_input = number.abi_encode();
-        let onchain_input_len = onchain_input.len() as u32;
 
-        // Execute program on input, without generating a ZK proof
-        let env = ExecutorEnv::builder()
-            .session_limit(Some(MAX_CYCLES))
-            .write(&onchain_input_len)
-            .unwrap()
-            .write_slice(&onchain_input)
-            .build()
+        let mut stdin = SP1Stdin::new();
+        stdin.write_slice(&onchain_input);
+
+        let client = ProverClient::new();
+        let (output, _) = client
+            .execute(PROGRAM_ELF, stdin)
+            .max_cycles(MAX_CYCLES)
+            .run()
             .unwrap();
-        let executor = LocalProver::new("locals only");
-        let execute_info = executor.execute(env, super::SQUARE_ROOT_ELF).unwrap();
 
         // Decode output and check result
         let number_with_square_root =
-            NumberWithSquareRoot::abi_decode(&execute_info.journal.bytes, false).unwrap();
+            NumberWithSquareRoot::abi_decode(&output.to_vec(), false).unwrap();
         assert_eq!(number_with_square_root.1, U256::from(3));
     }
 }

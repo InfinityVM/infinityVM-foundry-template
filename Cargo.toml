@@ -6,8 +6,7 @@ rust-version = "1.79"
 [workspace]
 members = [
 	"programs",
-    "programs-sp1",
-    "programs-sp1/program",
+    "programs/square-root",
     "zkvm-utils",
 ]
 
