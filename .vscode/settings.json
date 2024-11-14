@@ -4,7 +4,6 @@
     },
     "rust-analyzer.linkedProjects": [
       "Cargo.toml",
-      "programs/app/Cargo.toml",
       "programs/Cargo.toml",
     ],
     "rust-analyzer.cargo.targetDir": true,
