@@ -102,6 +102,9 @@ alloy-sol-types = { version = "0.7", default-features = false }
 
 clap = { version = "4", features = ["derive"] }
 
+ivm-abi = { git = "https://github.com/InfinityVM/InfinityVM.git", rev = "f360c96" }
+zkvm-executor = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "sp1-feature-branch" }
+
 k256 = { version = "0.13", default-features = false }
 
 risc0-zkvm = { version = "1", features = ["prove"], default-features = false }

@@ -15,7 +15,7 @@ The flow of the InfinityVM coprocessor looks like this:
 2. The coprocessor executes this job and submits the result back to the contract.
 3. The app contract can simply use the result from the coprocessor in any of their app logic.
 
-![InfinityVM coprocessor flow](images/overview.png)
+![InfinityVM coprocessor flow](assets/overview.png)
 
 ## Quick Start
 
@@ -82,7 +82,7 @@ We can call the `square_root.rs` program from our app contract. We just need to 
 1. Call `requestJob()` with the program ID of `square_root.rs` from `ProgramID.sol` along with ABI-encoded inputs (the number we want to calculate the square root of).
 2. Write a `_receiveResult()` function which accepts the output from the `square_root.rs` program and uses it in some application logic.
 
-![Onchain request flow](images/onchain-request.png)
+![Onchain request flow](assets/onchain-request.png)
 
 To build the contracts, you can run:
 ```
@@ -93,7 +93,7 @@ forge build
 
 We can also call the `square_root.rs` program offchain by sending a request directly to the coprocessor. The coprocessor will execute the job and submit the result to our app contract. The flow looks like this:
 
-![Offchain request flow](images/offchain-request.png)
+![Offchain request flow](assets/offchain-request.png)
 
 The offchain request to the coprocessor can be sent by an app, a user, or any authorized third-party. To support offchain requests for your app contract, you need to implement the `isValidSignature()` function in your contract, which is called to verify whether an offchain request is signed by an authorized signer/user. We've provided an example implementation of `isValidSignature()` in the `SquareRootConsumer.sol` contract (which checks that each job request is signed by a signer owned by the app), but you can implement any logic or checks you'd like.
 

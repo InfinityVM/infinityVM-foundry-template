@@ -10,6 +10,10 @@ use alloy::{
 use alloy_sol_types::{sol, SolType};
 use anyhow::{Context, Result};
 use clap::Parser;
+use ivm_abi::{
+    get_job_id, JobParams, abi_encode_offchain_job_request, abi_encode_result_with_metadata,
+    abi_encode_offchain_result_with_metadata,
+};
 use k256::ecdsa::SigningKey;
 use risc0_binfmt::compute_image_id;
 use risc0_zkvm::{Executor, ExecutorEnv, LocalProver};
@@ -117,10 +121,10 @@ async fn execute_onchain_job_ffi(
     let journal = execute_onchain_job(&elf, &onchain_input, max_cycles)?;
     let result_with_metadata = abi_encode_result_with_metadata(
         job_id,
-        onchain_input,
+        onchain_input.as_slice().try_into().unwrap(),
         max_cycles,
         program_id_bytes,
-        journal,
+        &journal,
     );
 
     let zkvm_operator_signature = sign_message(&result_with_metadata, signer).await?;
@@ -157,14 +161,15 @@ async fn execute_offchain_job_ffi(
     // Create a signed job request
     // This would normally be sent by the user/app signer, but we
     // construct it here to work with the foundry tests.
-    let job_request = abi_encode_offchain_job_request(
+    let job_params = JobParams {
         nonce,
         max_cycles,
-        &consumer,
-        program_id_bytes,
-        onchain_input.clone(),
-        offchain_input_hash.into(),
-    );
+        consumer_address: **Address::from_str(&consumer).unwrap(),
+        program_id: program_id_bytes,
+        onchain_input: &onchain_input,
+        offchain_input_hash: offchain_input_hash.into(),
+    };
+    let job_request = abi_encode_offchain_job_request(job_params);
 
     let offchain_signer = create_signer(&secret)?;
     let offchain_signer_signature = sign_message(&job_request, &offchain_signer).await?;
@@ -181,7 +186,7 @@ async fn execute_offchain_job_ffi(
         offchain_input_hash.into(),
         max_cycles,
         program_id_bytes,
-        journal,
+        &journal,
         versioned_blob_hashes,
     );
     let zkvm_operator_signature = sign_message(&offchain_result_with_metadata, signer).await?;
@@ -255,30 +260,6 @@ pub type OffChainResultWithSignatureCalldata = sol! {
     tuple(bytes,bytes,bytes,bytes)
 };
 
-/// The payload that gets signed to signify that the zkvm executor has faithfully
-/// executed an onchain job. Also the result payload the job manager contract expects.
-///
-/// tuple(JobID,OnchainInputHash,MaxCycles,VerifyingKey,RawOutput)
-pub type ResultWithMetadata = sol! {
-    tuple(bytes32,bytes32,uint64,bytes32,bytes)
-};
-
-/// The payload that gets signed to signify that the zkvm executor has faithfully
-/// executed an offchain job. Also the result payload the job manager contract expects.
-///
-/// tuple(JobID,OnchainInputHash,OffchainInputHash,OffchainStateHash,MaxCycles,VerifyingKey,
-/// RawOutput,VersionedBlobHashes)
-pub type OffChainResultWithMetadata = sol! {
-    tuple(bytes32,bytes32,bytes32,uint64,bytes32,bytes,bytes32[])
-};
-
-/// The payload that gets signed by the entity sending an offchain job request.
-/// This can be the user but the Consumer contract can decide who needs to
-/// sign this request.
-pub type OffchainJobRequest = sol! {
-    tuple(uint64,uint64,address,bytes32,bytes,bytes32)
-};
-
 /// Returns ABI-encoded calldata with result and signature. This ABI-encoded response will be
 /// sent to the `JobManager` contract.
 pub fn abi_encode_result_with_signature_calldata(result: Vec<u8>, signature: Vec<u8>) -> Vec<u8> {
@@ -299,81 +280,6 @@ pub fn abi_encode_offchain_result_with_signature_calldata(
         job_request,
         job_request_signature,
     ))
-}
-
-/// Returns an ABI-encoded result with metadata. This ABI-encoded response will be
-/// signed by the coprocessor operator.
-pub fn abi_encode_result_with_metadata(
-    job_id: [u8; 32],
-    onchain_input: Vec<u8>,
-    max_cycles: u64,
-    program_verifying_key: &[u8; 32],
-    raw_output: Vec<u8>,
-) -> Vec<u8> {
-    let onchain_input_hash = keccak256(onchain_input);
-    ResultWithMetadata::abi_encode(&(
-        job_id,
-        onchain_input_hash,
-        max_cycles,
-        program_verifying_key,
-        raw_output,
-    ))
-}
-
-/// Returns an ABI-encoded offchain result with metadata. This ABI-encoded response will be
-/// signed by the coprocessor operator.
-pub fn abi_encode_offchain_result_with_metadata(
-    job_id: [u8; 32],
-    onchain_input_hash: [u8; 32],
-    offchain_input_hash: [u8; 32],
-    max_cycles: u64,
-    program_verifying_key: &[u8; 32],
-    raw_output: Vec<u8>,
-    versioned_blob_hashes: Vec<[u8; 32]>,
-) -> Vec<u8> {
-    OffChainResultWithMetadata::abi_encode(&(
-        job_id,
-        onchain_input_hash,
-        offchain_input_hash,
-        max_cycles,
-        program_verifying_key,
-        raw_output,
-        versioned_blob_hashes,
-    ))
-}
-
-/// Returns an ABI-encoded offchain job request. This ABI-encoded request can be
-/// signed by the user sending the request, but the Consumer contract can
-/// decide who this request should be signed by.
-pub fn abi_encode_offchain_job_request(
-    nonce: u64,
-    max_cycles: u64,
-    consumer: &str,
-    program_verifying_key: &[u8; 32],
-    onchain_input: Vec<u8>,
-    offchain_input_hash: [u8; 32],
-) -> Vec<u8> {
-    OffchainJobRequest::abi_encode(&(
-        nonce,
-        max_cycles,
-        Address::from_str(consumer).unwrap(),
-        program_verifying_key,
-        onchain_input,
-        offchain_input_hash,
-    ))
-}
-
-type NonceAndConsumer = sol! {
-    tuple(uint64, address)
-};
-
-fn abi_encode_nonce_and_consumer(nonce: u64, consumer: Address) -> Vec<u8> {
-    NonceAndConsumer::abi_encode_packed(&(nonce, consumer))
-}
-
-/// Returns the job ID hash for a given nonce and consumer address.
-pub fn get_job_id(nonce: u64, consumer: Address) -> [u8; 32] {
-    keccak256(abi_encode_nonce_and_consumer(nonce, consumer)).into()
 }
 
 fn create_signer(secret: &str) -> Result<LocalSigner<SigningKey>> {
