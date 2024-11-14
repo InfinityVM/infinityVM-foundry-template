@@ -10,13 +10,11 @@ use alloy::{
 use alloy_sol_types::{sol, SolType};
 use anyhow::{Context, Result};
 use clap::Parser;
-use ivm_abi::{
-    get_job_id, JobParams, abi_encode_offchain_job_request,
-};
+use ivm_abi::{abi_encode_offchain_job_request, get_job_id, JobParams};
 use ivm_proto::VmType;
 use ivm_zkvm::Zkvm;
-use zkvm_executor::service::ZkvmExecutorService;
 use k256::ecdsa::SigningKey;
+use zkvm_executor::service::ZkvmExecutorService;
 
 type K256LocalSigner = LocalSigner<SigningKey>;
 
@@ -121,15 +119,9 @@ async fn execute_onchain_job_ffi(
     let program_id = ivm_zkvm::Sp1.derive_verifying_key(&elf)?;
 
     let (result_with_metadata, zkvm_operator_signature) = zkvm_executor
-        .execute_onchain_job(
-            job_id,
-            max_cycles,
-            program_id,
-            onchain_input,
-            elf,
-            VmType::Sp1,
-        )
-        .await.unwrap();
+        .execute_onchain_job(job_id, max_cycles, program_id, onchain_input, elf, VmType::Sp1)
+        .await
+        .unwrap();
 
     let calldata =
         abi_encode_result_with_signature_calldata(result_with_metadata, zkvm_operator_signature);

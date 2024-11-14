@@ -16,7 +16,7 @@ fn main() {
 
     // Calculate square root
     let square_root = number.root(2);
-    
+
     // Commit the output that will be received by the application contract.
     // Output is encoded using Solidity ABI for easy decoding in the app contract.
     sp1_zkvm::io::commit_slice(NumberWithSquareRoot::abi_encode(&(number, square_root)).as_slice());

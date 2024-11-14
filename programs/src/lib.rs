@@ -3,10 +3,10 @@ pub const SQUARE_ROOT_ELF: &[u8] = include_bytes!("../elf/square-root");
 
 #[cfg(test)]
 mod tests {
+    use crate::SQUARE_ROOT_ELF;
     use alloy_primitives::U256;
     use alloy_sol_types::{sol, SolType, SolValue};
     use sp1_sdk::{ProverClient, SP1Stdin};
-    use crate::SQUARE_ROOT_ELF;
 
     type NumberWithSquareRoot = sol! {
         tuple(uint256,uint256)
@@ -24,11 +24,8 @@ mod tests {
         stdin.write_slice(&onchain_input);
 
         let client = ProverClient::new();
-        let (output, _) = client
-            .execute(SQUARE_ROOT_ELF, stdin)
-            .max_cycles(MAX_CYCLES)
-            .run()
-            .unwrap();
+        let (output, _) =
+            client.execute(SQUARE_ROOT_ELF, stdin).max_cycles(MAX_CYCLES).run().unwrap();
 
         // Decode output and check result
         let number_with_square_root =
