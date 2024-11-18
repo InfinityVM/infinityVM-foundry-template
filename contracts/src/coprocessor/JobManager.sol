@@ -92,7 +92,7 @@ contract JobManager is
 
         string memory elfPath = getElfPath(programID);
         // This would normally be a separate call by relayer, but for tests we call it here
-        (bytes memory resultWithMetadata, bytes memory signature) = executeOnchainJob(elfPath, onchainInput, jobID, maxCycles);(elfPath, onchainInput, jobID, maxCycles);
+        (bytes memory resultWithMetadata, bytes memory signature) = executeOnchainJob(elfPath, programID, onchainInput, jobID, maxCycles);(elfPath, onchainInput, jobID, maxCycles);
         submitResult(resultWithMetadata, signature);
 
         return jobID;
@@ -215,8 +215,8 @@ contract JobManager is
         Consumer(job.consumer).receiveResult(jobID, result);
     }
 
-    function executeOnchainJob(string memory elfPath, bytes memory onchainInput, bytes32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
-        string[] memory imageRunnerInput = new string[](12);
+    function executeOnchainJob(string memory elfPath, bytes32 programID, bytes memory onchainInput, bytes32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
+        string[] memory imageRunnerInput = new string[](13);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
         imageRunnerInput[i++] = "run";
@@ -227,6 +227,7 @@ contract JobManager is
         imageRunnerInput[i++] = "-q";
         imageRunnerInput[i++] = "execute-onchain-job";
         imageRunnerInput[i++] = elfPath;
+        imageRunnerInput[i++] = programID.toHexString();
         imageRunnerInput[i++] = onchainInput.toHexString();
         imageRunnerInput[i++] = jobID.toHexString();
         imageRunnerInput[i++] = maxCycles.toString();
@@ -235,7 +236,7 @@ contract JobManager is
 
     function executeOffchainJob(OffchainJobRequest calldata request, bytes calldata offchainInput, string calldata privateKey) internal returns (bytes memory, bytes memory, bytes memory, bytes memory) {
         string memory elfPath = getElfPath(request.programID);
-        string[] memory imageRunnerInput = new string[](15);
+        string[] memory imageRunnerInput = new string[](16);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
         imageRunnerInput[i++] = "run";
@@ -246,6 +247,7 @@ contract JobManager is
         imageRunnerInput[i++] = "-q";
         imageRunnerInput[i++] = "execute-offchain-job";
         imageRunnerInput[i++] = elfPath;
+        imageRunnerInput[i++] = request.programID.toHexString();
         imageRunnerInput[i++] = request.onchainInput.toHexString();
         imageRunnerInput[i++] = offchainInput.toHexString();
         imageRunnerInput[i++] = request.maxCycles.toString();

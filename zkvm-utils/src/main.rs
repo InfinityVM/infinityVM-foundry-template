@@ -12,7 +12,6 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use ivm_abi::{abi_encode_offchain_job_request, get_job_id, JobParams};
 use ivm_proto::VmType;
-use ivm_zkvm::Zkvm;
 use ivm_zkvm_executor::service::ZkvmExecutorService;
 use k256::ecdsa::SigningKey;
 
@@ -25,6 +24,9 @@ enum Command {
     ExecuteOnchainJob {
         /// The guest binary path
         guest_binary_path: String,
+
+        /// The hex-encoded program ID
+        program_id: String,
 
         /// The hex-encoded input to provide to the guest binary
         onchain_input: String,
@@ -39,6 +41,9 @@ enum Command {
     ExecuteOffchainJob {
         /// The guest binary path
         guest_binary_path: String,
+
+        /// The hex-encoded program ID
+        program_id: String,
 
         /// The hex encoded input to provide to the guest binary
         onchain_input: String,
@@ -68,11 +73,18 @@ pub async fn main() -> Result<()> {
     let zkvm_executor = ZkvmExecutorService::new(signer);
 
     match Command::parse() {
-        Command::ExecuteOnchainJob { guest_binary_path, onchain_input, job_id, max_cycles } => {
+        Command::ExecuteOnchainJob {
+            guest_binary_path,
+            program_id,
+            onchain_input,
+            job_id,
+            max_cycles,
+        } => {
             let job_id_decoded: [u8; 32] =
                 hex::decode(job_id.strip_prefix("0x").unwrap_or(&job_id))?.try_into().unwrap();
             execute_onchain_job_ffi(
                 guest_binary_path,
+                hex::decode(program_id.strip_prefix("0x").unwrap_or(&program_id))?,
                 hex::decode(onchain_input.strip_prefix("0x").unwrap_or(&onchain_input))?,
                 job_id_decoded,
                 max_cycles,
@@ -82,6 +94,7 @@ pub async fn main() -> Result<()> {
         }
         Command::ExecuteOffchainJob {
             guest_binary_path,
+            program_id,
             onchain_input,
             offchain_input,
             max_cycles,
@@ -91,6 +104,7 @@ pub async fn main() -> Result<()> {
         } => {
             execute_offchain_job_ffi(
                 guest_binary_path,
+                hex::decode(program_id.strip_prefix("0x").unwrap_or(&program_id))?,
                 hex::decode(onchain_input.strip_prefix("0x").unwrap_or(&onchain_input))?,
                 hex::decode(offchain_input.strip_prefix("0x").unwrap_or(&offchain_input))?,
                 max_cycles,
@@ -110,15 +124,13 @@ pub async fn main() -> Result<()> {
 /// for an onchain job.
 async fn execute_onchain_job_ffi(
     elf_path: String,
+    program_id: Vec<u8>,
     onchain_input: Vec<u8>,
     job_id: [u8; 32],
     max_cycles: u64,
     zkvm_executor: &ZkvmExecutorService<LocalSigner<SigningKey>>,
 ) -> Result<()> {
     let elf = std::fs::read(elf_path).unwrap();
-    // TODO: pass this in instead of re-deriving it?
-    let program_id = ivm_zkvm::Sp1.derive_verifying_key(&elf)?;
-
     let (result_with_metadata, zkvm_operator_signature) = zkvm_executor
         .execute_onchain_job(job_id, max_cycles, program_id, onchain_input, elf, VmType::Sp1)
         .await
@@ -139,6 +151,7 @@ async fn execute_onchain_job_ffi(
 /// for an offchain job.
 async fn execute_offchain_job_ffi(
     elf_path: String,
+    program_id: Vec<u8>,
     onchain_input: Vec<u8>,
     offchain_input: Vec<u8>,
     max_cycles: u64,
@@ -148,7 +161,6 @@ async fn execute_offchain_job_ffi(
     zkvm_executor: &ZkvmExecutorService<LocalSigner<SigningKey>>,
 ) -> Result<()> {
     let elf = std::fs::read(elf_path).unwrap();
-    let program_id = ivm_zkvm::Sp1.derive_verifying_key(&elf)?;
     let offchain_input_hash = keccak256(offchain_input.clone());
 
     // Create a signed job request
