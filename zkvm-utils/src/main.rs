@@ -14,7 +14,7 @@ use ivm_abi::{abi_encode_offchain_job_request, get_job_id, JobParams};
 use ivm_proto::VmType;
 use ivm_zkvm::Zkvm;
 use k256::ecdsa::SigningKey;
-use zkvm_executor::service::ZkvmExecutorService;
+use ivm_zkvm_executor::service::ZkvmExecutorService;
 
 type K256LocalSigner = LocalSigner<SigningKey>;
 

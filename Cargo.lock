@@ -1031,7 +1031,7 @@ dependencies = [
  "bitflags 2.6.0",
  "cexpr",
  "clang-sys",
- "itertools 0.13.0",
+ "itertools 0.12.1",
  "log",
  "prettyplease",
  "proc-macro2",
@@ -1792,7 +1792,7 @@ dependencies = [
 [[package]]
 name = "eip4844"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#f30c661084e0070d592d41095ce7cadb4d0d3472"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/ivm-zkvm-executor#e33cfeffbb92669aa73521bb2ff0500d3c7bdb12"
 dependencies = [
  "alloy",
  "c-kzg",
@@ -2667,7 +2667,7 @@ checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 [[package]]
 name = "ivm-abi"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#f30c661084e0070d592d41095ce7cadb4d0d3472"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/ivm-zkvm-executor#e33cfeffbb92669aa73521bb2ff0500d3c7bdb12"
 dependencies = [
  "alloy",
 ]
@@ -2675,7 +2675,7 @@ dependencies = [
 [[package]]
 name = "ivm-proto"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#f30c661084e0070d592d41095ce7cadb4d0d3472"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/ivm-zkvm-executor#e33cfeffbb92669aa73521bb2ff0500d3c7bdb12"
 dependencies = [
  "borsh",
  "prost",
@@ -2687,12 +2687,27 @@ dependencies = [
 [[package]]
 name = "ivm-zkvm"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#f30c661084e0070d592d41095ce7cadb4d0d3472"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/ivm-zkvm-executor#e33cfeffbb92669aa73521bb2ff0500d3c7bdb12"
 dependencies = [
  "alloy",
  "anyhow",
  "sp1-sdk",
  "thiserror",
+]
+
+[[package]]
+name = "ivm-zkvm-executor"
+version = "0.0.1"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/ivm-zkvm-executor#e33cfeffbb92669aa73521bb2ff0500d3c7bdb12"
+dependencies = [
+ "alloy",
+ "eip4844",
+ "ivm-abi",
+ "ivm-proto",
+ "ivm-zkvm",
+ "thiserror",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -2809,7 +2824,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4979f22fdb869068da03c9f7528f8297c6fd2606bc3a4affe42e6a823fdb8da4"
 dependencies = [
  "cfg-if",
- "windows-targets 0.52.6",
+ "windows-targets 0.48.5",
 ]
 
 [[package]]
@@ -3803,7 +3818,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9552f850d5f0964a4e4d0bf306459ac29323ddfbae05e35a7c0d35cb0803cc5"
 dependencies = [
  "anyhow",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "proc-macro2",
  "quote",
  "syn 2.0.87",
@@ -6103,21 +6118,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "zkvm-executor"
-version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#f30c661084e0070d592d41095ce7cadb4d0d3472"
-dependencies = [
- "alloy",
- "eip4844",
- "ivm-abi",
- "ivm-proto",
- "ivm-zkvm",
- "thiserror",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "zkvm-utils"
 version = "0.0.1"
 dependencies = [
@@ -6128,11 +6128,11 @@ dependencies = [
  "ivm-abi",
  "ivm-proto",
  "ivm-zkvm",
+ "ivm-zkvm-executor",
  "k256",
  "sp1-build 3.2.1",
  "sp1-helper",
  "sp1-sdk",
  "sp1-zkvm",
  "tokio",
- "zkvm-executor",
 ]

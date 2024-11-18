@@ -18,7 +18,7 @@ tokio = { workspace = true }
 ivm-abi = { workspace = true }
 ivm-proto = { workspace = true }
 ivm-zkvm = { workspace = true }
-zkvm-executor = { workspace = true }
+ivm-zkvm-executor = { workspace = true }
 
 sp1-zkvm = { workspace = true }
 sp1-sdk = { workspace = true }
