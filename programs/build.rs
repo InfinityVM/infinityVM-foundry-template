@@ -1,5 +1,3 @@
-use std::fs;
-
 use sp1_build::{build_program_with_args, BuildArgs};
 use zkvm_utils::sol::{generate_solidity_files, Options};
 
@@ -7,26 +5,14 @@ use zkvm_utils::sol::{generate_solidity_files, Options};
 const SOLIDITY_PROGRAM_ID_PATH: &str = "../contracts/src/ProgramID.sol";
 const SOLIDITY_DEPLOY_SCRIPT_PATH: &str = "../contracts/script/Deployer.s.sol";
 
-fn main() {
-    // Get a list of all programs.
-    let entries = fs::read_dir(".").unwrap();
-    let mut programs = Vec::new();
-    for entry in entries {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if path.is_dir() {
-            if let Some(dir_name) = path.file_name() {
-                let dir_name = dir_name.to_string_lossy();
-                if dir_name != "src" && dir_name != "elf" && dir_name != "app" {
-                    programs.push(dir_name.to_string());
-                }
-            }
-        }
-    }
+// Add your zkVM programs here.
+const PROGRAM_NAMES: &[&str] = &["square-root"];
 
-    if programs.is_empty() {
+fn main() {
+    if PROGRAM_NAMES.is_empty() {
         panic!("No programs found in the current directory");
     }
+    let programs: Vec<String> = PROGRAM_NAMES.to_vec().iter().map(|s| s.to_string()).collect();
 
     // For each program, build the ELF.
     for program in programs.clone() {

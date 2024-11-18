@@ -147,7 +147,6 @@ async fn execute_offchain_job_ffi(
     secret: String,
     zkvm_executor: &ZkvmExecutorService<LocalSigner<SigningKey>>,
 ) -> Result<()> {
-    // print current directory
     let elf = std::fs::read(elf_path).unwrap();
     let program_id = ivm_zkvm::Sp1.derive_verifying_key(&elf)?;
     let offchain_input_hash = keccak256(offchain_input.clone());
