@@ -17,7 +17,7 @@ fn main() {
         if path.is_dir() {
             if let Some(dir_name) = path.file_name() {
                 let dir_name = dir_name.to_string_lossy();
-                if dir_name != "src" && dir_name != "elf" {
+                if dir_name != "src" && dir_name != "elf" && dir_name != "app" {
                     programs.push(dir_name.to_string());
                 }
             }

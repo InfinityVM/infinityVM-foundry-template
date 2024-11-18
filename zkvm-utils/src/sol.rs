@@ -7,18 +7,21 @@ use std::{
 
 use alloy::primitives::hex;
 use anyhow::{anyhow, bail, Context, Result};
-use ivm_zkvm::{Sp1, Zkvm};
-use risc0_build::GuestListEntry;
-use risc0_zkp::core::digest::Digest;
+use ivm_zkvm::Zkvm;
 
 const PROGRAM_ID_LIB_HEADER: &str = r#"pragma solidity ^0.8.13;
 
 library ProgramID {
 "#;
 
+/// Metadata for a program.
+#[derive(Debug, Clone)]
 pub struct ProgramMetadata {
+    /// Name of the program.
     pub name: String,
+    /// Hex-encoded program ID.
     pub program_id_hex: String,
+    /// Path to the ELF file.
     pub elf_path: String,
 }
 
@@ -57,12 +60,20 @@ pub fn generate_solidity_files(program_names: Vec<String>, opts: &Options) -> Re
     }
 
     // Construct program metadata.
-    let programs: Vec<ProgramMetadata> = program_names.iter().map(|name| {
-        let elf_path = format!("elf/{name}");
-        let elf = std::fs::read(elf_path.clone()).unwrap();
-        let program_id = ivm_zkvm::Sp1.derive_verifying_key(&elf).unwrap();
-        ProgramMetadata { name: name.clone(), program_id_hex: hex::encode(program_id), elf_path }
-    }).collect();
+    let programs: Vec<ProgramMetadata> = program_names
+        .iter()
+        .map(|name| {
+            let elf_path = format!("elf/{name}");
+            let elf = std::fs::read(elf_path).unwrap();
+            let program_id = ivm_zkvm::Sp1.derive_verifying_key(&elf).unwrap();
+            let elf_path_sol = format!("programs/elf/{name}");
+            ProgramMetadata {
+                name: name.clone(),
+                program_id_hex: hex::encode(program_id),
+                elf_path: elf_path_sol,
+            }
+        })
+        .collect();
 
     let program_id_file_path = opts
         .program_id_sol_path
