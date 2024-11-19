@@ -34,35 +34,35 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup use 1.80
 ```
 
-Next, install the risc0 toolchain for zkVM functionality:
+Next, install the sp1 toolchain for zkVM functionality:
 
 ```sh
-cargo install cargo-binstall
-cargo binstall cargo-risczero
-cargo risczero install
-cargo risczero --version
+curl -L https://sp1.succinct.xyz | bash
+sp1up
+# Verify the installation
+cargo prove --version
 ```
 
 ### Write a Rust program to run in the coprocessor
 
-All application programs run by the coprocessor live in `programs/app/src`. For our square root application, we have a `square_root.rs` program which takes in an integer and returns the square root. This program is also a good example of how to accept inputs and return output.
+All application programs run by the coprocessor live in `programs/`. Each program has its own folder within `programs/`. For example, for our square root app, we have this:
+```shell
+programs
+├── square-root         // Name of the program
+│   ├── src
+│       ├── main.rs     // Core logic of the program
+│   ├── Cargo.lock
+│   └── Cargo.toml
+```
+
+The app's program is `main.rs`, which takes in an integer and returns the square root. This program is also a good example of how to accept inputs and return output.
 
 This is a simple example but you could write a lot more interesting and complex code in your Rust programs. One thing to note is you can't print anything to `stdout` in your Rust program (if you'd like to print something while debugging your Rust program, we've provided instructions in the `Write tests for your app` section below).
 
-After you've written your Rust program, add it to `programs/app/Cargo.toml`. For example, if we wrote a new program `multiply.rs`, we would add it like this:
-```
-[package]
-name = "guests"
-version = "0.1.0"
-edition = "2021"
-
-[[bin]]
-name = "square-root"
-path = "src/square_root.rs"
-
-[[bin]]
-name = "multiply"
-path = "src/multiply.rs"
+After you've written your Rust program, add its name to the `PROGRAM_NAMES` list in `programs/build.rs`. For example, we currently have:
+```rust
+// Add your zkVM programs here.
+const PROGRAM_NAMES: &[&str] = &["square-root"];
 ```
 
 Now you can run:
@@ -113,7 +113,7 @@ To run the tests, you can run:
 forge test -vvv --ffi 
 ```
 
-If you would like to test or debug your Rust program by itself, we have an example test in `programs/src/lib.rs`. You can run this using:
+If you would like to write unit tests for your Rust program or debug your program by itself, we have an example test in `programs/src/lib.rs`. You can run this using:
 ```
 cargo test
 ```
@@ -136,7 +136,7 @@ With InfinityVM, some apps can leverage offchain job requests to run as real-tim
 Lint:
 
 ```sh
-RISC0_SKIP_BUILD=true cargo clippy
+cargo clippy
 ```
 
 Format:
