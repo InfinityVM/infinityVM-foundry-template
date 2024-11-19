@@ -15,7 +15,7 @@ fn main() {
     for program in programs.clone() {
         let args = BuildArgs {
             elf_name: program.clone(),
-            output_directory: "programs/elf".to_string(),
+            output_directory: format!("programs/{}/elf", program),
             ..Default::default()
         };
         build_program_with_args(&program, args);

@@ -1792,7 +1792,7 @@ dependencies = [
 [[package]]
 name = "eip4844"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#4ca096f4bcd81de0d5ff40d4512fc5e3cbcf962d"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/sp1-porting-improvements#30dfc7172414d1f6c53731aca3c0c63e1ab3d0c8"
 dependencies = [
  "alloy",
  "c-kzg",
@@ -2667,7 +2667,7 @@ checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 [[package]]
 name = "ivm-abi"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#4ca096f4bcd81de0d5ff40d4512fc5e3cbcf962d"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/sp1-porting-improvements#30dfc7172414d1f6c53731aca3c0c63e1ab3d0c8"
 dependencies = [
  "alloy",
 ]
@@ -2675,7 +2675,7 @@ dependencies = [
 [[package]]
 name = "ivm-proto"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#4ca096f4bcd81de0d5ff40d4512fc5e3cbcf962d"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/sp1-porting-improvements#30dfc7172414d1f6c53731aca3c0c63e1ab3d0c8"
 dependencies = [
  "borsh",
  "prost",
@@ -2687,7 +2687,7 @@ dependencies = [
 [[package]]
 name = "ivm-zkvm"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#4ca096f4bcd81de0d5ff40d4512fc5e3cbcf962d"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/sp1-porting-improvements#30dfc7172414d1f6c53731aca3c0c63e1ab3d0c8"
 dependencies = [
  "alloy",
  "anyhow",
@@ -2698,7 +2698,7 @@ dependencies = [
 [[package]]
 name = "ivm-zkvm-executor"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#4ca096f4bcd81de0d5ff40d4512fc5e3cbcf962d"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/sp1-porting-improvements#30dfc7172414d1f6c53731aca3c0c63e1ab3d0c8"
 dependencies = [
  "alloy",
  "eip4844",

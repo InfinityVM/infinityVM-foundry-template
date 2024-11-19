@@ -65,8 +65,8 @@ pub fn generate_solidity_files(program_names: Vec<String>, opts: &Options) -> Re
         .map(|name| {
             let elf_path = format!("elf/{name}");
             let elf = std::fs::read(elf_path).unwrap();
-            let program_id = ivm_zkvm::Sp1.derive_verifying_key(&elf).unwrap();
-            let elf_path_sol = format!("programs/elf/{name}");
+            let program_id = ivm_zkvm::Sp1.derive_program_id(&elf).unwrap();
+            let elf_path_sol = format!("programs/{name}/elf");
             ProgramMetadata {
                 name: name.clone(),
                 program_id_hex: hex::encode(program_id),
@@ -114,7 +114,7 @@ pub fn generate_program_id_sol(programs: &[ProgramMetadata]) -> Result<Vec<u8>> 
 /// Generate source code for Solidity deploy script for coprocessor contracts
 pub fn generate_deploy_script(programs: &[ProgramMetadata]) -> Result<Vec<u8>> {
     // Generate the code to set ELF paths
-    let relative_elf_path_prefix = "programs/elf/";
+    let relative_elf_path_prefix = "programs/";
     let elf_entries: Vec<_> = programs
         .iter()
         .map(|program| {
