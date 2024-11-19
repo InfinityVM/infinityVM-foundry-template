@@ -19,9 +19,3 @@ ivm-abi = { workspace = true }
 ivm-proto = { workspace = true }
 ivm-zkvm = { workspace = true }
 ivm-zkvm-executor = { workspace = true }
-
-sp1-zkvm = { workspace = true }
-sp1-sdk = { workspace = true }
-sp1-helper = { workspace = true }
-sp1-build = { workspace = true }
-
