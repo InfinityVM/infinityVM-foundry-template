@@ -9,9 +9,6 @@ const SOLIDITY_DEPLOY_SCRIPT_PATH: &str = "../contracts/script/Deployer.s.sol";
 const PROGRAM_NAMES: &[&str] = &["square-root"];
 
 fn main() {
-    if PROGRAM_NAMES.is_empty() {
-        panic!("No programs found in the current directory");
-    }
     let programs: Vec<String> = PROGRAM_NAMES.to_vec().iter().map(|s| s.to_string()).collect();
 
     // For each program, build the ELF.
