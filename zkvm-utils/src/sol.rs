@@ -29,10 +29,10 @@ pub struct ProgramMetadata {
 #[derive(Debug, Clone, Default)]
 #[non_exhaustive] // more options may be added in the future.
 pub struct Options {
-    /// Path the generated Solidity file with program ID information.
+    /// Path to the generated Solidity file with program ID information.
     pub program_id_sol_path: Option<PathBuf>,
 
-    /// Path the generated Solidity file with deploy script for coprocessor contracts.
+    /// Path to the generated Solidity file with deploy script for coprocessor contracts.
     pub deploy_script_path: Option<PathBuf>,
 }
 
