@@ -4,13 +4,19 @@ pub const SQUARE_ROOT_ELF: &[u8] = include_bytes!("../../target/sp1/square-root"
 #[cfg(test)]
 mod tests {
     use crate::SQUARE_ROOT_ELF;
+    use alloy::{
+        sol,
+        sol_types::{SolType, SolValue},
+    };
     use alloy_primitives::U256;
-    use alloy_sol_types::{sol, SolType, SolValue};
     use sp1_sdk::{ProverClient, SP1Stdin};
 
-    type NumberWithSquareRoot = sol! {
-        tuple(uint256,uint256)
-    };
+    sol! {
+        struct NumberWithSquareRoot {
+            uint256 number;
+            uint256 square_root;
+        }
+    }
 
     const MAX_CYCLES: u64 = 1_000_000;
 
@@ -29,7 +35,7 @@ mod tests {
 
         // Decode output and check result
         let number_with_square_root =
-            NumberWithSquareRoot::abi_decode(&output.to_vec(), false).unwrap();
-        assert_eq!(number_with_square_root.1, U256::from(3));
+            <NumberWithSquareRoot as SolType>::abi_decode(&output.to_vec(), false).unwrap();
+        assert_eq!(number_with_square_root.square_root, U256::from(3));
     }
 }

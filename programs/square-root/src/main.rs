@@ -1,12 +1,18 @@
 #![no_main]
 sp1_zkvm::entrypoint!(main);
 
-use alloy::primitives::U256;
-use alloy_sol_types::{sol, SolType, SolValue};
-
-type NumberWithSquareRoot = sol! {
-    tuple(uint256,uint256)
+use alloy::{
+    primitives::U256,
+    sol,
+    sol_types::{SolType, SolValue},
 };
+
+sol! {
+    struct NumberWithSquareRoot {
+        uint256 number;
+        uint256 square_root;
+    }
+}
 
 fn main() {
     // This application only uses onchain input. We read the onchain input here.
@@ -19,5 +25,8 @@ fn main() {
 
     // Commit the output that will be received by the application contract.
     // Output is encoded using Solidity ABI for easy decoding in the app contract.
-    sp1_zkvm::io::commit_slice(NumberWithSquareRoot::abi_encode(&(number, square_root)).as_slice());
+    let number_with_square_root = NumberWithSquareRoot { number, square_root };
+    sp1_zkvm::io::commit_slice(
+        <NumberWithSquareRoot as SolType>::abi_encode(&number_with_square_root).as_slice(),
+    );
 }

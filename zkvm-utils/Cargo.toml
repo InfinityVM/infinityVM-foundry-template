@@ -10,7 +10,6 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 alloy = { workspace = true }
-alloy-sol-types = { workspace = true }
 clap = { workspace = true, features = ["derive", "env"] }
 k256 = { workspace = true }
 tokio = { workspace = true }

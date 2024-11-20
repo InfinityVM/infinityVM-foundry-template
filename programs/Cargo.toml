@@ -7,8 +7,8 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
+alloy = { workspace = true, features = ["sol-types"], default-features = false }
 alloy-primitives = { workspace = true }
-alloy-sol-types = { workspace = true }
 sp1-sdk = { workspace = true }
 
 [build-dependencies]

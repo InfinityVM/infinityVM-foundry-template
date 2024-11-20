@@ -6,8 +6,9 @@ use std::io::Write;
 use alloy::{
     primitives::{hex, keccak256, Address},
     signers::{local::LocalSigner, Signer},
+    sol,
+    sol_types::SolType,
 };
-use alloy_sol_types::{sol, SolType};
 use anyhow::{Context, Result};
 use clap::Parser;
 use ivm_abi::{abi_encode_offchain_job_request, get_job_id, JobParams};
@@ -80,12 +81,11 @@ pub async fn main() -> Result<()> {
             job_id,
             max_cycles,
         } => {
-            let job_id_decoded: [u8; 32] =
-                hex::decode(job_id.strip_prefix("0x").unwrap_or(&job_id))?.try_into().unwrap();
+            let job_id_decoded: [u8; 32] = hex::decode(job_id)?.try_into().unwrap();
             execute_onchain_job_ffi(
                 guest_binary_path,
-                hex::decode(program_id.strip_prefix("0x").unwrap_or(&program_id))?,
-                hex::decode(onchain_input.strip_prefix("0x").unwrap_or(&onchain_input))?,
+                hex::decode(program_id)?,
+                hex::decode(onchain_input)?,
                 job_id_decoded,
                 max_cycles,
                 &zkvm_executor,
@@ -104,9 +104,9 @@ pub async fn main() -> Result<()> {
         } => {
             execute_offchain_job_ffi(
                 guest_binary_path,
-                hex::decode(program_id.strip_prefix("0x").unwrap_or(&program_id))?,
-                hex::decode(onchain_input.strip_prefix("0x").unwrap_or(&onchain_input))?,
-                hex::decode(offchain_input.strip_prefix("0x").unwrap_or(&offchain_input))?,
+                hex::decode(program_id)?,
+                hex::decode(onchain_input)?,
+                hex::decode(offchain_input)?,
                 max_cycles,
                 consumer,
                 nonce,
@@ -244,8 +244,7 @@ pub fn abi_encode_offchain_result_with_signature_calldata(
 }
 
 fn create_signer(secret: &str) -> Result<LocalSigner<SigningKey>> {
-    let hex = if let Some(stripped) = secret.strip_prefix("0x") { stripped } else { secret };
-    let decoded = hex::decode(hex)?;
+    let decoded = hex::decode(secret)?;
     let signer = K256LocalSigner::from_slice(&decoded)?;
 
     Ok(signer)

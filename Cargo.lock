@@ -3764,7 +3764,6 @@ name = "program"
 version = "0.1.0"
 dependencies = [
  "alloy",
- "alloy-sol-types",
  "sp1-helper",
  "sp1-zkvm",
 ]
@@ -3773,8 +3772,8 @@ dependencies = [
 name = "programs"
 version = "0.1.0"
 dependencies = [
+ "alloy",
  "alloy-primitives 0.7.7",
- "alloy-sol-types",
  "sp1-build 3.2.1",
  "sp1-helper",
  "sp1-sdk",
@@ -6122,7 +6121,6 @@ name = "zkvm-utils"
 version = "0.0.1"
 dependencies = [
  "alloy",
- "alloy-sol-types",
  "anyhow",
  "clap",
  "ivm-abi",
