@@ -1,4 +1,4 @@
-use sp1_build::{build_program_with_args, BuildArgs};
+use ivm_sp1_utils::build_sp1_program;
 use zkvm_utils::sol::{generate_solidity_files, Options};
 
 // Paths where the generated Solidity files will be written.
@@ -13,12 +13,11 @@ fn main() {
 
     // For each program, build the ELF.
     for program in programs.clone() {
-        let args = BuildArgs {
-            elf_name: program.clone(),
-            output_directory: "target/sp1".to_string(),
-            ..Default::default()
-        };
-        build_program_with_args(&program, args);
+        build_sp1_program(
+            program.as_str(),
+            program.as_str(),
+            format!("target/sp1/{program}").as_str(),
+        );
     }
 
     // Generate Solidity source files for use with Forge.

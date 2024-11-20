@@ -7,7 +7,7 @@ use std::{
 
 use alloy::primitives::hex;
 use anyhow::{anyhow, bail, Context, Result};
-use ivm_zkvm::Zkvm;
+use ivm_sp1_utils::get_program_id;
 
 const PROGRAM_ID_LIB_HEADER: &str = r#"pragma solidity ^0.8.28;
 
@@ -63,10 +63,10 @@ pub fn generate_solidity_files(program_names: Vec<String>, opts: &Options) -> Re
     let programs: Vec<ProgramMetadata> = program_names
         .iter()
         .map(|name| {
-            let elf_path = format!("../target/sp1/{name}");
-            let elf = std::fs::read(elf_path).unwrap();
-            let program_id = ivm_zkvm::Sp1.derive_program_id(&elf).unwrap();
-            let elf_path_sol = format!("target/sp1/{name}");
+            let program_id_path = format!("target/sp1/{name}/{name}.vkey");
+            let program_id = get_program_id(program_id_path.as_str());
+
+            let elf_path_sol = format!("target/sp1/{name}/{name}");
             ProgramMetadata {
                 name: name.clone(),
                 program_id_hex: hex::encode(program_id),
@@ -114,20 +114,13 @@ pub fn generate_program_id_sol(programs: &[ProgramMetadata]) -> Result<Vec<u8>> 
 /// Generate source code for Solidity deploy script for coprocessor contracts
 pub fn generate_deploy_script(programs: &[ProgramMetadata]) -> Result<Vec<u8>> {
     // Generate the code to set ELF paths
-    let relative_elf_path_prefix = "programs/";
     let elf_entries: Vec<_> = programs
         .iter()
         .map(|program| {
-            let program_id = program.program_id_hex.clone();
-            let absolute_elf_path = program.elf_path.to_string();
-            let relative_elf_path =
-                if let Some(pos) = absolute_elf_path.find(relative_elf_path_prefix) {
-                    &absolute_elf_path[pos..]
-                } else {
-                    absolute_elf_path.as_str()
-                };
-
-            format!("jobManager.setElfPath(bytes32(0x{}), \"{}\");", program_id, relative_elf_path)
+            format!(
+                "jobManager.setElfPath(bytes32(0x{}), \"{}\");",
+                program.program_id_hex, program.elf_path
+            )
         })
         .collect();
 
