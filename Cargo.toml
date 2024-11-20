@@ -110,9 +110,9 @@ ivm-zkvm-executor = { git = "https://github.com/InfinityVM/InfinityVM.git", bran
 
 k256 = { version = "0.13", default-features = false }
 
-sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", rev = "8a62caa0b8893aabe8e9477d4568c20387ae4896", features = ["libm", "lib"], default-features = false }
-sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "8a62caa0b8893aabe8e9477d4568c20387ae4896", default-features = false }
-sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", rev = "8a62caa0b8893aabe8e9477d4568c20387ae4896", default-features = false }
+sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", rev = "37629f6afd54c08180889d71777824c7e48642d3", features = ["libm", "lib"], default-features = false }
+sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "37629f6afd54c08180889d71777824c7e48642d3" }
+sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", rev = "37629f6afd54c08180889d71777824c7e48642d3", default-features = false }
 sp1-build = "3.1.0"
 
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"], default-features = false }
+tokio = { version = "1.40.0", features = ["rt-multi-thread", "macros", "sync", "time"], default-features = false }

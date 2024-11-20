@@ -46,7 +46,7 @@ contract Deployer is Script, Utils {
 
         // Set ELF paths
         jobManager.setElfPath(
-            bytes32(0x690319a94891f8ac10128bc076700f765676d343454412c76d7a41a74217af3f),
+            bytes32(0x11f33be858c41ce554eea7d643911c8e5c4de4f775da47bf100317333d2ef425),
             "target/sp1/square-root/square-root"
         );
 
