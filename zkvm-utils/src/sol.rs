@@ -9,7 +9,7 @@ use alloy::primitives::hex;
 use anyhow::{anyhow, bail, Context, Result};
 use ivm_zkvm::Zkvm;
 
-const PROGRAM_ID_LIB_HEADER: &str = r#"pragma solidity ^0.8.13;
+const PROGRAM_ID_LIB_HEADER: &str = r#"pragma solidity ^0.8.28;
 
 library ProgramID {
 "#;
@@ -136,7 +136,7 @@ pub fn generate_deploy_script(programs: &[ProgramMetadata]) -> Result<Vec<u8>> {
     let file_content = format!(
         r#"
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.28;
 
 import {{Script, console}} from "forge-std/Script.sol";
 import {{JobManager}} from "../src/coprocessor/JobManager.sol";
