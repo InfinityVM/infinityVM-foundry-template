@@ -1,5 +1,5 @@
 /// The ELF (executable and linkable format) file for the square root program.
-pub const SQUARE_ROOT_ELF: &[u8] = include_bytes!("../square-root/elf/square-root");
+pub const SQUARE_ROOT_ELF: &[u8] = include_bytes!("../../target/sp1/square-root");
 
 #[cfg(test)]
 mod tests {

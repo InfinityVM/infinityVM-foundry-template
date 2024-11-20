@@ -63,10 +63,10 @@ pub fn generate_solidity_files(program_names: Vec<String>, opts: &Options) -> Re
     let programs: Vec<ProgramMetadata> = program_names
         .iter()
         .map(|name| {
-            let elf_path = format!("elf/{name}");
+            let elf_path = format!("../target/sp1/{name}");
             let elf = std::fs::read(elf_path).unwrap();
             let program_id = ivm_zkvm::Sp1.derive_program_id(&elf).unwrap();
-            let elf_path_sol = format!("programs/{name}/elf");
+            let elf_path_sol = format!("target/sp1/{name}");
             ProgramMetadata {
                 name: name.clone(),
                 program_id_hex: hex::encode(program_id),
