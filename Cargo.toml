@@ -6,6 +6,7 @@ rust-version = "1.79"
 [workspace]
 members = [
 	"programs",
+    "programs/square-root",
     "zkvm-utils",
 ]
 
@@ -100,15 +101,18 @@ alloy-sol-types = { version = "0.7", default-features = false }
 
 clap = { version = "4", features = ["derive"] }
 
+ivm-abi = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "dylan/sp1-porting" }
+# TODO: Update these to main after merging SP1 feature branch
+ivm-proto = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "dylan/sp1-porting" }
+ivm-sp1-utils = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "dylan/sp1-porting" }
+ivm-zkvm = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "dylan/sp1-porting" }
+ivm-zkvm-executor = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "dylan/sp1-porting" }
+
 k256 = { version = "0.13", default-features = false }
 
-risc0-zkvm = { version = "1", features = ["prove"], default-features = false }
-risc0-build = { version = "1", default-features = false }
-risc0-zkp = { version = "1.0", default-features = false }
-risc0-binfmt = { version = "1", default-features = false }
-
-sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", features = ["libm"], rev = "9a19e0becfe2bd133d3b1bf7070edf90892f7171", default-features = false }
-sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "9a19e0becfe2bd133d3b1bf7070edf90892f7171", default-features = false }
-sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", rev = "9a19e0becfe2bd133d3b1bf7070edf90892f7171", default-features = false }
+sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", rev = "37629f6afd54c08180889d71777824c7e48642d3", features = ["libm", "lib"], default-features = false }
+sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "37629f6afd54c08180889d71777824c7e48642d3", features = ["network"], default-features = false }
+sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", rev = "37629f6afd54c08180889d71777824c7e48642d3", default-features = false }
+sp1-build = "3.1.0"
 
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"], default-features = false }

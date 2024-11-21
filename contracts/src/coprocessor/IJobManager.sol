@@ -8,13 +8,13 @@ uint8 constant JOB_STATE_COMPLETED = 3;
 
 interface IJobManager {
     // EVENTS
-    event JobCreated(bytes32 indexed jobID, uint64 indexed nonce, address indexed consumer, uint64 maxCycles, bytes32 programID, bytes onchainInput);
+    event JobCreated(bytes32 indexed jobID, uint64 indexed nonce, address indexed consumer, uint64 maxCycles, bytes programID, bytes onchainInput);
     event JobCancelled(bytes32 indexed jobID);
     event JobCompleted(bytes32 indexed jobID, bytes result);
 
     // STRUCTS
     struct JobMetadata {
-        bytes32 programID;
+        bytes programID;
         uint64 maxCycles;
         address consumer;
         uint8 status;
@@ -24,7 +24,7 @@ interface IJobManager {
         bytes32 jobID;
         bytes32 onchainInputHash;
         uint64 maxCycles;
-        bytes32 programID;
+        bytes programID;
         bytes result;
     }
 
@@ -33,7 +33,7 @@ interface IJobManager {
         bytes32 onchainInputHash;
         bytes32 offchainInputHash;
         uint64 maxCycles;
-        bytes32 programID;
+        bytes programID;
         bytes result;
         bytes32[] versionedBlobHashes;
     }
@@ -42,13 +42,13 @@ interface IJobManager {
         uint64 nonce;
         uint64 maxCycles;
         address consumer;
-        bytes32 programID;
+        bytes programID;
         bytes onchainInput;
         bytes32 offchainInputHash;
     }
 
     // FUNCTIONS
-    function createJob(uint64 nonce, bytes32 programID, bytes calldata onchainInput, uint64 maxCycles) external returns (bytes32 jobID);
+    function createJob(uint64 nonce, bytes calldata programID, bytes calldata onchainInput, uint64 maxCycles) external returns (bytes32 jobID);
     function getJobMetadata(bytes32 jobID) external view returns (JobMetadata memory);
     function cancelJob(bytes32 jobID) external;
     function submitResult(bytes calldata resultWithMetadata, bytes calldata signature) external;

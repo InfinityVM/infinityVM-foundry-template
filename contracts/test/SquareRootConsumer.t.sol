@@ -28,7 +28,7 @@ contract SquareRootConsumerTest is Test, Deployer {
         bytes32 jobID = consumer.requestSquareRoot(9);
         
         JobManager.JobMetadata memory jobMetadata = jobManager.getJobMetadata(jobID);
-        assertEq(jobMetadata.programID, ProgramID.SQUARE_ROOT_ID);
+        assertEq(keccak256(jobMetadata.programID), keccak256(ProgramID.SQUARE_ROOT_ID));
 
         // Job status is COMPLETED since createJob in JobManager calls
         // submitResult in this Foundry template
@@ -57,7 +57,7 @@ contract SquareRootConsumerTest is Test, Deployer {
         );
 
         JobManager.JobMetadata memory jobMetadata = jobManager.getJobMetadata(DEFAULT_JOB_ID);
-        assertEq(jobMetadata.programID, ProgramID.SQUARE_ROOT_ID);
+        assertEq(keccak256(jobMetadata.programID), keccak256(ProgramID.SQUARE_ROOT_ID));
 
         // Job status is COMPLETED since createJob in JobManager calls
         // submitResult in this Foundry template

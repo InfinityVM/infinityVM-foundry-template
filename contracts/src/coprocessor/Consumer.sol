@@ -59,7 +59,7 @@ abstract contract Consumer {
     }
 
     function requestJob(
-        bytes32 programID,
+        bytes memory programID,
         bytes memory onchainInput,
         uint64 maxCycles
     ) internal virtual returns (bytes32) {

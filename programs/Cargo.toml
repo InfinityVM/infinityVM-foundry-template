@@ -3,14 +3,16 @@ name = "programs"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+path = "src/lib.rs"
+
 [dependencies]
-risc0-zkvm = { workspace = true, features = ["client"] }
+alloy = { workspace = true, features = ["sol-types"], default-features = false }
 alloy-primitives = { workspace = true }
-alloy-sol-types = { workspace = true }
+sp1-sdk = { workspace = true }
 
 [build-dependencies]
-risc0-build = { workspace = true }
+sp1-helper = { workspace = true }
+sp1-build = { workspace = true }
 zkvm-utils = { path = "../zkvm-utils" }
-
-[package.metadata.risc0]
-methods = ["app"]
+ivm-sp1-utils = { workspace = true }

@@ -7,22 +7,32 @@ use std::{
 
 use alloy::primitives::hex;
 use anyhow::{anyhow, bail, Context, Result};
-use risc0_build::GuestListEntry;
-use risc0_zkp::core::digest::Digest;
+use ivm_sp1_utils::get_program_id;
 
-const PROGRAM_ID_LIB_HEADER: &str = r#"pragma solidity ^0.8.13;
+const PROGRAM_ID_LIB_HEADER: &str = r#"pragma solidity ^0.8.28;
 
 library ProgramID {
 "#;
+
+/// Metadata for a program.
+#[derive(Debug, Clone)]
+pub struct ProgramMetadata {
+    /// Name of the program.
+    pub name: String,
+    /// Hex-encoded program ID.
+    pub program_id_hex: String,
+    /// Path to the ELF file.
+    pub elf_path: String,
+}
 
 /// Options for building and code generation.
 #[derive(Debug, Clone, Default)]
 #[non_exhaustive] // more options may be added in the future.
 pub struct Options {
-    /// Path the generated Solidity file with program ID information.
+    /// Path to the generated Solidity file with program ID information.
     pub program_id_sol_path: Option<PathBuf>,
 
-    /// Path the generated Solidity file with deploy script for coprocessor contracts.
+    /// Path to the generated Solidity file with deploy script for coprocessor contracts.
     pub deploy_script_path: Option<PathBuf>,
 }
 
@@ -43,38 +53,54 @@ impl Options {
 }
 
 /// Generate Solidity files for testing a consumer app with `InfinityVM`.
-pub fn generate_solidity_files(guests: &[GuestListEntry], opts: &Options) -> Result<()> {
+pub fn generate_solidity_files(program_names: Vec<String>, opts: &Options) -> Result<()> {
     // Skip Solidity source files generation if INFINITY_SKIP_BUILD is enabled.
     if env::var("INFINITY_SKIP_BUILD").is_ok() {
         return Ok(());
     }
 
+    // Construct program metadata.
+    let programs: Vec<ProgramMetadata> = program_names
+        .iter()
+        .map(|name| {
+            let program_id_path = format!("target/sp1/{name}/{name}.vkey");
+            let program_id = get_program_id(program_id_path.as_str());
+
+            let elf_path_sol = format!("target/sp1/{name}/{name}");
+            ProgramMetadata {
+                name: name.clone(),
+                program_id_hex: hex::encode(program_id),
+                elf_path: elf_path_sol,
+            }
+        })
+        .collect();
+
     let program_id_file_path = opts
         .program_id_sol_path
         .as_ref()
         .ok_or_else(|| anyhow!("path for program ID Solidity file must be provided"))?;
-    fs::write(program_id_file_path, generate_program_id_sol(guests)?)
+    fs::write(program_id_file_path, generate_program_id_sol(&programs)?)
         .with_context(|| format!("failed to save changes to {}", program_id_file_path.display()))?;
 
     let deploy_script_path = opts
         .deploy_script_path
         .as_ref()
         .ok_or_else(|| anyhow!("path for deploy script Solidity file must be provided"))?;
-    fs::write(deploy_script_path, generate_deploy_script(guests)?)
+    fs::write(deploy_script_path, generate_deploy_script(&programs)?)
         .with_context(|| format!("failed to save changes to {}", deploy_script_path.display()))?;
 
     Ok(())
 }
 
-/// Generate source code for a Solidity library containing program IDs for the given guest programs.
-pub fn generate_program_id_sol(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
+/// Generate source code for a Solidity library containing program IDs for the given programs.
+pub fn generate_program_id_sol(programs: &[ProgramMetadata]) -> Result<Vec<u8>> {
     // Assemble a list of program IDs.
-    let program_ids: Vec<_> = guests
+    let program_ids: Vec<_> = programs
         .iter()
-        .map(|guest| {
-            let name = guest.name.to_uppercase().replace('-', "_");
-            let program_id = hex::encode(Digest::from(guest.image_id));
-            format!("bytes32 public constant {name}_ID = bytes32(0x{program_id});")
+        .map(|program| {
+            let name = program.name.to_uppercase().replace('-', "_");
+            let program_id = program.program_id_hex.clone();
+            format!("bytes public constant {name}_ID = hex\"{program_id}\";")
         })
         .collect();
 
@@ -86,22 +112,15 @@ pub fn generate_program_id_sol(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
 }
 
 /// Generate source code for Solidity deploy script for coprocessor contracts
-pub fn generate_deploy_script(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
+pub fn generate_deploy_script(programs: &[ProgramMetadata]) -> Result<Vec<u8>> {
     // Generate the code to set ELF paths
-    let relative_elf_path_prefix = "target/riscv-guest/riscv32im-risc0-zkvm-elf/release/";
-    let elf_entries: Vec<_> = guests
+    let elf_entries: Vec<_> = programs
         .iter()
-        .map(|guest| {
-            let program_id = hex::encode(Digest::from(guest.image_id));
-            let absolute_elf_path = guest.path.to_string();
-            let relative_elf_path =
-                if let Some(pos) = absolute_elf_path.find(relative_elf_path_prefix) {
-                    &absolute_elf_path[pos..]
-                } else {
-                    absolute_elf_path.as_str()
-                };
-
-            format!("jobManager.setElfPath(bytes32(0x{}), \"{}\");", program_id, relative_elf_path)
+        .map(|program| {
+            format!(
+                "jobManager.setElfPath(hex\"{}\", \"{}\");",
+                program.program_id_hex, program.elf_path
+            )
         })
         .collect();
 
@@ -110,7 +129,7 @@ pub fn generate_deploy_script(guests: &[GuestListEntry]) -> Result<Vec<u8>> {
     let file_content = format!(
         r#"
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.28;
 
 import {{Script, console}} from "forge-std/Script.sol";
 import {{JobManager}} from "../src/coprocessor/JobManager.sol";

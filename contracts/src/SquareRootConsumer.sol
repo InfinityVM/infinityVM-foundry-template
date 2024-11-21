@@ -8,6 +8,11 @@ import {console} from "forge-std/Script.sol";
 import {ECDSA} from "solady/utils/ECDSA.sol";
 
 contract SquareRootConsumer is Consumer, SingleOffchainSigner {
+    struct NumberWithSquareRoot {
+        uint256 number;
+        uint256 square_root;
+    }
+
     mapping(uint256 => uint256) public numberToSquareRoot;
     mapping(bytes32 => bytes) public jobIDToResult;
 
@@ -28,11 +33,11 @@ contract SquareRootConsumer is Consumer, SingleOffchainSigner {
     }
 
     function _receiveResult(bytes32 jobID, bytes memory result) internal override {
-        // Decode the coprocessor result into AddressWithBalance
-        (uint256 originalNumber, uint256 squareRoot) = abi.decode(result, (uint256, uint256));
+        // Decode the coprocessor result into NumberWithSquareRoot
+        NumberWithSquareRoot memory decodedResult = abi.decode(result, (NumberWithSquareRoot));
 
         // Perform app-specific logic using the result
-        numberToSquareRoot[originalNumber] = squareRoot;
+        numberToSquareRoot[decodedResult.number] = decodedResult.square_root;
         jobIDToResult[jobID] = result;
     }
 }

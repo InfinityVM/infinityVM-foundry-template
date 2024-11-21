@@ -1,14 +1,22 @@
-include!(concat!(env!("OUT_DIR"), "/methods.rs"));
+/// The ELF (executable and linkable format) file for the square root program.
+pub const SQUARE_ROOT_ELF: &[u8] = include_bytes!("../../target/sp1/square-root/square-root");
 
 #[cfg(test)]
 mod tests {
-    use alloy_primitives::U256;
-    use alloy_sol_types::{sol, SolType, SolValue};
-    use risc0_zkvm::{Executor, ExecutorEnv, LocalProver};
-
-    type NumberWithSquareRoot = sol! {
-        tuple(uint256,uint256)
+    use crate::SQUARE_ROOT_ELF;
+    use alloy::{
+        sol,
+        sol_types::{SolType, SolValue},
     };
+    use alloy_primitives::U256;
+    use sp1_sdk::{ProverClient, SP1Stdin};
+
+    sol! {
+        struct NumberWithSquareRoot {
+            uint256 number;
+            uint256 square_root;
+        }
+    }
 
     const MAX_CYCLES: u64 = 1_000_000;
 
@@ -17,22 +25,17 @@ mod tests {
         // Input for program
         let number = U256::from(9);
         let onchain_input = number.abi_encode();
-        let onchain_input_len = onchain_input.len() as u32;
 
-        // Execute program on input, without generating a ZK proof
-        let env = ExecutorEnv::builder()
-            .session_limit(Some(MAX_CYCLES))
-            .write(&onchain_input_len)
-            .unwrap()
-            .write_slice(&onchain_input)
-            .build()
-            .unwrap();
-        let executor = LocalProver::new("locals only");
-        let execute_info = executor.execute(env, super::SQUARE_ROOT_ELF).unwrap();
+        let mut stdin = SP1Stdin::new();
+        stdin.write_slice(&onchain_input);
+
+        let client = ProverClient::new();
+        let (output, _) =
+            client.execute(SQUARE_ROOT_ELF, stdin).max_cycles(MAX_CYCLES).run().unwrap();
 
         // Decode output and check result
         let number_with_square_root =
-            NumberWithSquareRoot::abi_decode(&execute_info.journal.bytes, false).unwrap();
-        assert_eq!(number_with_square_root.1, U256::from(3));
+            <NumberWithSquareRoot as SolType>::abi_decode(&output.to_vec(), false).unwrap();
+        assert_eq!(number_with_square_root.square_root, U256::from(3));
     }
 }

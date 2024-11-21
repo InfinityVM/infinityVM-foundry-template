@@ -41,7 +41,7 @@ contract JobManager is
     // Mapping from job ID --> versioned blob hashes
     mapping(bytes32 => bytes32[]) public jobIDToBlobhashes;
     // Mapping from program ID (verification key) --> ELF path
-    mapping(bytes32 => string) public programIDToElfPath;
+    mapping(bytes32 => string) public programIDHashToElfPath;
     // storage gap for upgradeability
     uint256[50] private __GAP;
 
@@ -68,8 +68,8 @@ contract JobManager is
         return jobIDToMetadata[jobID];
     }
 
-    function getElfPath(bytes32 programID) public view returns (string memory) {
-        return programIDToElfPath[programID];
+    function getElfPath(bytes calldata programID) public view returns (string memory) {
+        return programIDHashToElfPath[keccak256(programID)];
     }
 
     function setRelayer(address _relayer) external onlyOwner {
@@ -80,11 +80,11 @@ contract JobManager is
         coprocessorOperator = _coprocessorOperator;
     }
 
-    function setElfPath(bytes32 programID, string calldata elfPath) external onlyOwner {
-        programIDToElfPath[programID] = elfPath;
+    function setElfPath(bytes calldata programID, string calldata elfPath) external onlyOwner {
+        programIDHashToElfPath[keccak256(programID)] = elfPath;
     }
 
-    function createJob(uint64 nonce, bytes32 programID, bytes calldata onchainInput, uint64 maxCycles) external override returns (bytes32) {
+    function createJob(uint64 nonce, bytes calldata programID, bytes calldata onchainInput, uint64 maxCycles) external override returns (bytes32) {
         address consumer = msg.sender;
         bytes32 jobID = keccak256(abi.encodePacked(nonce, consumer));
        _createJob(nonce, jobID, programID, maxCycles, consumer, onchainInput);
@@ -92,13 +92,13 @@ contract JobManager is
 
         string memory elfPath = getElfPath(programID);
         // This would normally be a separate call by relayer, but for tests we call it here
-        (bytes memory resultWithMetadata, bytes memory signature) = executeOnchainJob(elfPath, onchainInput, jobID, maxCycles);(elfPath, onchainInput, jobID, maxCycles);
+        (bytes memory resultWithMetadata, bytes memory signature) = executeOnchainJob(elfPath, programID, onchainInput, jobID, maxCycles);(elfPath, onchainInput, jobID, maxCycles);
         submitResult(resultWithMetadata, signature);
 
         return jobID;
     }
 
-    function _createJob(uint64 nonce, bytes32 jobID, bytes32 programID, uint64 maxCycles, address consumer, bytes memory onchainInput) internal {
+    function _createJob(uint64 nonce, bytes32 jobID, bytes memory programID, uint64 maxCycles, address consumer, bytes memory onchainInput) internal {
         require(jobIDToMetadata[jobID].status == 0, "JobManager.createJob: job already exists with this nonce and consumer");
         jobIDToMetadata[jobID] = JobMetadata(programID, maxCycles, consumer, JOB_STATE_PENDING);
         Consumer(consumer).setInputsForJob(jobID, onchainInput, keccak256(""));
@@ -190,7 +190,7 @@ contract JobManager is
         bytes32 jobID,
         uint64 maxCycles,
         bytes32 onchainInputHash,
-        bytes32 programID,
+        bytes memory programID,
         bytes memory result
     ) internal {
         JobMetadata memory job = jobIDToMetadata[jobID];
@@ -201,7 +201,7 @@ contract JobManager is
             "JobManager.submitResult: onchain input signed by coprocessor doesn't match onchain input submitted with job");
         
         // This is to prevent coprocessor from using a different program ID to produce a malicious result
-        require(job.programID == programID,
+        require(keccak256(job.programID) == keccak256(programID),
             "JobManager.submitResult: program ID signed by coprocessor doesn't match program ID submitted with job");
         
         require(job.maxCycles == maxCycles, "JobManager.submitResult: max cycles signed by coprocessor doesn't match max cycles submitted with job");
@@ -215,8 +215,8 @@ contract JobManager is
         Consumer(job.consumer).receiveResult(jobID, result);
     }
 
-    function executeOnchainJob(string memory elfPath, bytes memory onchainInput, bytes32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
-        string[] memory imageRunnerInput = new string[](12);
+    function executeOnchainJob(string memory elfPath, bytes memory programID, bytes memory onchainInput, bytes32 jobID, uint64 maxCycles) internal returns (bytes memory, bytes memory) {
+        string[] memory imageRunnerInput = new string[](13);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
         imageRunnerInput[i++] = "run";
@@ -227,6 +227,7 @@ contract JobManager is
         imageRunnerInput[i++] = "-q";
         imageRunnerInput[i++] = "execute-onchain-job";
         imageRunnerInput[i++] = elfPath;
+        imageRunnerInput[i++] = programID.toHexString();
         imageRunnerInput[i++] = onchainInput.toHexString();
         imageRunnerInput[i++] = jobID.toHexString();
         imageRunnerInput[i++] = maxCycles.toString();
@@ -235,7 +236,7 @@ contract JobManager is
 
     function executeOffchainJob(OffchainJobRequest calldata request, bytes calldata offchainInput, string calldata privateKey) internal returns (bytes memory, bytes memory, bytes memory, bytes memory) {
         string memory elfPath = getElfPath(request.programID);
-        string[] memory imageRunnerInput = new string[](15);
+        string[] memory imageRunnerInput = new string[](16);
         uint256 i = 0;
         imageRunnerInput[i++] = "cargo";
         imageRunnerInput[i++] = "run";
@@ -246,6 +247,7 @@ contract JobManager is
         imageRunnerInput[i++] = "-q";
         imageRunnerInput[i++] = "execute-offchain-job";
         imageRunnerInput[i++] = elfPath;
+        imageRunnerInput[i++] = request.programID.toHexString();
         imageRunnerInput[i++] = request.onchainInput.toHexString();
         imageRunnerInput[i++] = offchainInput.toHexString();
         imageRunnerInput[i++] = request.maxCycles.toString();

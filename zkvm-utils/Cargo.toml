@@ -10,12 +10,11 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 alloy = { workspace = true }
-alloy-sol-types = { workspace = true }
 clap = { workspace = true, features = ["derive", "env"] }
 k256 = { workspace = true }
-risc0-build = { workspace = true }
-risc0-binfmt = { workspace = true }
-risc0-zkp = { workspace = true }
-risc0-zkvm = { workspace = true, features = ["client"] }
 tokio = { workspace = true }
 
+ivm-abi = { workspace = true }
+ivm-proto = { workspace = true }
+ivm-sp1-utils = { workspace = true }
+ivm-zkvm-executor = { workspace = true }
