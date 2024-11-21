@@ -2051,7 +2051,7 @@ dependencies = [
 [[package]]
 name = "eip4844"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/sp1-porting-improvements#fe14d90bc64697e07098131174a74e16c31f0e83"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#fe14d90bc64697e07098131174a74e16c31f0e83"
 dependencies = [
  "alloy",
  "c-kzg",
@@ -2973,7 +2973,7 @@ checksum = "540654e97a3f4470a492cd30ff187bc95d89557a903a2bbf112e2fae98104ef2"
 [[package]]
 name = "ivm-abi"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/sp1-porting-improvements#fe14d90bc64697e07098131174a74e16c31f0e83"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#fe14d90bc64697e07098131174a74e16c31f0e83"
 dependencies = [
  "alloy",
 ]
@@ -2981,7 +2981,7 @@ dependencies = [
 [[package]]
 name = "ivm-proto"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/sp1-porting-improvements#fe14d90bc64697e07098131174a74e16c31f0e83"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#fe14d90bc64697e07098131174a74e16c31f0e83"
 dependencies = [
  "borsh",
  "prost",
@@ -2993,7 +2993,7 @@ dependencies = [
 [[package]]
 name = "ivm-sp1-utils"
 version = "0.1.0"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/sp1-porting-improvements#fe14d90bc64697e07098131174a74e16c31f0e83"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#fe14d90bc64697e07098131174a74e16c31f0e83"
 dependencies = [
  "bincode",
  "cargo_metadata",
@@ -3004,7 +3004,7 @@ dependencies = [
 [[package]]
 name = "ivm-zkvm"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/sp1-porting-improvements#fe14d90bc64697e07098131174a74e16c31f0e83"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#fe14d90bc64697e07098131174a74e16c31f0e83"
 dependencies = [
  "alloy",
  "anyhow",
@@ -3015,7 +3015,7 @@ dependencies = [
 [[package]]
 name = "ivm-zkvm-executor"
 version = "0.0.1"
-source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=maanav/sp1-porting-improvements#fe14d90bc64697e07098131174a74e16c31f0e83"
+source = "git+https://github.com/InfinityVM/InfinityVM.git?branch=dylan/sp1-porting#fe14d90bc64697e07098131174a74e16c31f0e83"
 dependencies = [
  "alloy",
  "eip4844",

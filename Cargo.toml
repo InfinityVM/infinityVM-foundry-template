@@ -101,12 +101,12 @@ alloy-sol-types = { version = "0.7", default-features = false }
 
 clap = { version = "4", features = ["derive"] }
 
-ivm-abi = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "maanav/sp1-porting-improvements" }
+ivm-abi = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "dylan/sp1-porting" }
 # TODO: Update these to main after merging SP1 feature branch
-ivm-proto = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "maanav/sp1-porting-improvements" }
-ivm-sp1-utils = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "maanav/sp1-porting-improvements" }
-ivm-zkvm = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "maanav/sp1-porting-improvements" }
-ivm-zkvm-executor = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "maanav/sp1-porting-improvements" }
+ivm-proto = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "dylan/sp1-porting" }
+ivm-sp1-utils = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "dylan/sp1-porting" }
+ivm-zkvm = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "dylan/sp1-porting" }
+ivm-zkvm-executor = { git = "https://github.com/InfinityVM/InfinityVM.git", branch = "dylan/sp1-porting" }
 
 k256 = { version = "0.13", default-features = false }
 

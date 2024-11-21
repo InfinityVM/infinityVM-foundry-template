@@ -100,7 +100,7 @@ pub fn generate_program_id_sol(programs: &[ProgramMetadata]) -> Result<Vec<u8>> 
         .map(|program| {
             let name = program.name.to_uppercase().replace('-', "_");
             let program_id = program.program_id_hex.clone();
-            format!("bytes32 public constant {name}_ID = bytes32(0x{program_id});")
+            format!("bytes public constant {name}_ID = hex\"{program_id}\";")
         })
         .collect();
 
@@ -118,7 +118,7 @@ pub fn generate_deploy_script(programs: &[ProgramMetadata]) -> Result<Vec<u8>> {
         .iter()
         .map(|program| {
             format!(
-                "jobManager.setElfPath(bytes32(0x{}), \"{}\");",
+                "jobManager.setElfPath(hex\"{}\", \"{}\");",
                 program.program_id_hex, program.elf_path
             )
         })
