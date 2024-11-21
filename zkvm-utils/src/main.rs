@@ -130,16 +130,11 @@ async fn execute_onchain_job_ffi(
     max_cycles: u64,
     zkvm_executor: &ZkvmExecutorService<LocalSigner<SigningKey>>,
 ) -> Result<()> {
-    // println!("NARULA program id hex is {:?}", hex::encode(program_id.clone()));
     let elf = std::fs::read(elf_path).unwrap();
     let (result_with_metadata, zkvm_operator_signature) = zkvm_executor
         .execute_onchain_job(job_id, max_cycles, program_id, onchain_input, elf, VmType::Sp1)
         .await
         .unwrap();
-
-    // abi decode
-    // let result = ResultWithMetadata::abi_decode(&result_with_metadata, false).unwrap();
-    // println!("NARULA program ID is {:?}", hex::encode(result.program_id.clone()));
 
     let calldata =
         abi_encode_result_with_signature_calldata(result_with_metadata, zkvm_operator_signature);
