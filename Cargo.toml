@@ -111,7 +111,7 @@ ivm-zkvm-executor = { git = "https://github.com/InfinityVM/InfinityVM.git", bran
 k256 = { version = "0.13", default-features = false }
 
 sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", rev = "37629f6afd54c08180889d71777824c7e48642d3", features = ["libm", "lib"], default-features = false }
-sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "37629f6afd54c08180889d71777824c7e48642d3" }
+sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "37629f6afd54c08180889d71777824c7e48642d3", features = ["network"], default-features = false }
 sp1-helper = { git = "https://github.com/succinctlabs/sp1.git", rev = "37629f6afd54c08180889d71777824c7e48642d3", default-features = false }
 sp1-build = "3.1.0"
 
