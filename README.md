@@ -34,7 +34,15 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup use 1.80
 ```
 
-Next, install the sp1 toolchain for zkVM functionality:
+Install Foundry:
+
+```sh
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+forge build
+```
+
+Next, install the SP1 toolchain for zkVM functionality:
 
 ```sh
 curl -L https://sp1.succinct.xyz | bash
