@@ -31,7 +31,7 @@ Setup rust
 
 ```sh
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup use 1.80
+rustup override set 1.80
 ```
 
 Install Foundry:
